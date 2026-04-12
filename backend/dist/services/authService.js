@@ -85,6 +85,18 @@ class AuthService {
             }
         });
     }
+    // STORE FCM TOKEN
+    static storeFcmToken(erpid, fcmToken) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const normalizedErpId = normalizeErpId(erpid);
+            const { error } = yield supabase_1.supabase
+                .from("fcm_tokens")
+                .upsert({ erpid: normalizedErpId, token: fcmToken }, { onConflict: 'erpid' });
+            if (error) {
+                throw new Error(error.message);
+            }
+        });
+    }
 }
 const loginWithErpCredentials = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const erpId = normalizeErpId(payload.erpId);

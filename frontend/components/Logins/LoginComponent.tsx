@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getFCMToken, setupTokenRefresh } from '../../services/notificationService';
 
 type AuthUser = {
   id: string;
@@ -19,6 +20,31 @@ export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComp
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Setup token refresh handler
+    const unsubscribe = setupTokenRefresh(async (newToken) => {
+      const token = await AsyncStorage.getItem('authToken');
+      const user = await AsyncStorage.getItem('authUser');
+      if (token && user) {
+        const parsedUser = JSON.parse(user);
+        try {
+          await fetch(`${apiBaseUrl}/api/auth/store-fcm-token`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ fcmToken: newToken }),
+          });
+        } catch (error) {
+          console.error('Failed to update FCM token:', error);
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [apiBaseUrl]);
 
   
   const handleLogin = async () => {
@@ -50,6 +76,23 @@ export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComp
       await AsyncStorage.setItem('authToken', payload.token);
       await AsyncStorage.setItem('authUser', JSON.stringify(payload.user));
       onLoginSuccess(payload.token, payload.user);        
+
+      // Store FCM token
+      try {
+        const fcmToken = await getFCMToken();
+        if (fcmToken) {
+          await fetch(`${apiBaseUrl}/api/auth/store-fcm-token`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${payload.token}`
+            },
+            body: JSON.stringify({ fcmToken }),
+          });
+        }
+      } catch (error) {
+        console.error('Failed to store FCM token:', error);
+      }
 
       
     } catch {

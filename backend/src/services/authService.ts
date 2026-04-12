@@ -93,6 +93,19 @@ class AuthService {
       throw new Error(error.message);
     }
   }
+
+  // STORE FCM TOKEN
+  static async storeFcmToken(erpid: string, fcmToken: string): Promise<void> {
+    const normalizedErpId = normalizeErpId(erpid);
+
+    const { error } = await supabase
+      .from("fcm_tokens")
+      .upsert({ erpid: normalizedErpId, token: fcmToken }, { onConflict: 'erpid' });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
 }
 
 export const loginWithErpCredentials = async (payload: LoginRequest): Promise<LoginResponse> => {

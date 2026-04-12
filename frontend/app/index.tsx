@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import HomeComponent from '../components/Home/HomeComponent';
 import LoginComponent from '../components/Logins/LoginComponent';
+import { requestNotificationPermission, setupForegroundListener, setupBackgroundHandler } from '../services/notificationService';
 
 type AuthUser = {
   id: string;
@@ -20,7 +21,7 @@ export default function Login() {
   const router = useRouter();
 
   const apiBaseUrl = useMemo(
-    () => process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:5000',
+    () => process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.177.250:5000',
     []
   );
 
@@ -46,6 +47,19 @@ export default function Login() {
     };
 
     loadAuthData();
+  }, []);
+
+  // Setup notifications
+  useEffect(() => {
+    const setupNotifications = async () => {
+      const enabled = await requestNotificationPermission();
+      if (enabled) {
+        setupForegroundListener();
+        setupBackgroundHandler();
+      }
+    };
+
+    setupNotifications();
   }, []);
 
   // 🔐 Login success handler

@@ -23,25 +23,17 @@ type Row = {
   totalHours: number;
 };
 
-type HomeComponentProps = {
+type Props = {
   user?: AuthUser;
   token: string;
   apiBaseUrl: string;
   onLogout?: () => void;
 };
 
-const isValidDate = (value: Date | null): value is Date =>
-  value !== null && !Number.isNaN(value.getTime());
-
-const formatTime = (value: Date | null): string => {
-  if (!isValidDate(value)) {
-    return '--';
-  }
-
-  return value.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+const formatTime = (value: string | null) => {
+  if (!value) return '--';
+  const date = new Date(value);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
 export default function HomeComponent({
@@ -49,7 +41,7 @@ export default function HomeComponent({
   token,
   apiBaseUrl,
   onLogout,
-}: HomeComponentProps) {
+}: Props) {
   const [attendance, setAttendance] = useState<Row | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -68,7 +60,6 @@ export default function HomeComponent({
       const json = await res.json();
 
       if (!res.ok) {
-        setAttendance(null);
         setErrorMessage(json?.error ?? 'Failed to load attendance.');
         return;
       }
@@ -76,17 +67,17 @@ export default function HomeComponent({
       const latest = json?.attendance?.[0];
 
       if (!latest) {
-        setAttendance(null);
-        setErrorMessage('No attendance data found yet.');
+        setErrorMessage('No attendance data found.');
         return;
       }
 
-      const loginDate = latest.login_time ? new Date(latest.login_time) : null;
-      const logoutDate = latest.logout_time ? new Date(latest.logout_time) : null;
+      const loginDate = latest.login_time;
+      const logoutDate = latest.logout_time;
 
       let totalHours = 0;
-      if (isValidDate(loginDate) && isValidDate(logoutDate)) {
-        const diff = logoutDate.getTime() - loginDate.getTime();
+      if (loginDate && logoutDate) {
+        const diff =
+          new Date(logoutDate).getTime() - new Date(loginDate).getTime();
         totalHours = diff > 0 ? diff / (1000 * 60 * 60) : 0;
       }
 
@@ -99,17 +90,17 @@ export default function HomeComponent({
         totalHours,
       });
     } catch {
-      setAttendance(null);
-      setErrorMessage('Cannot reach server. Make sure backend is running.');
+      setErrorMessage('Cannot reach server.');
     } finally {
       setLoading(false);
     }
-  }, [apiBaseUrl, token, user?.erpId, user?.name]);
+  }, [apiBaseUrl, token, user]);
 
   useEffect(() => {
     fetchAttendance();
   }, [fetchAttendance]);
 
+  // 🔥 Loading UI
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -119,81 +110,78 @@ export default function HomeComponent({
     );
   }
 
+  // 🔥 Error UI
   if (errorMessage) {
     return (
       <View style={styles.loadingContainer}>
         <Text style={styles.errorText}>{errorMessage}</Text>
+
         <TouchableOpacity style={styles.retryButton} onPress={fetchAttendance}>
           <Text style={styles.retryText}>Retry</Text>
         </TouchableOpacity>
-        {onLogout ? (
+
+        {onLogout && (
           <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
-        ) : null}
+        )}
       </View>
     );
   }
 
-  if (!attendance) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>No attendance to show.</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchAttendance}>
-          <Text style={styles.retryText}>Refresh</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
+  // 🔥 Main UI (your original design)
   return (
     <View style={styles.screen}>
       <View style={styles.heroCard}>
         <Text style={styles.welcomeText}>Welcome back</Text>
-        <Text style={styles.title}>{attendance.name}</Text>
+        <Text style={styles.title}>{attendance?.name}</Text>
         <Text style={styles.subtitle}>Track your campus attendance</Text>
 
-        {onLogout ? (
+        {onLogout && (
           <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
-        ) : null}
+        )}
 
         <View style={styles.statsRow}>
           <View style={styles.statChip}>
             <Text style={styles.statLabel}>Date</Text>
-            <Text style={styles.statValue}>{attendance.date}</Text>
+            <Text style={styles.statValue}>{attendance?.date}</Text>
           </View>
 
           <View style={styles.statChip}>
             <Text style={styles.statLabel}>Hours</Text>
-            <Text style={styles.statValue}>{attendance.totalHours.toFixed(2)}h</Text>
+            <Text style={styles.statValue}>
+              {attendance?.totalHours.toFixed(2)}h
+            </Text>
           </View>
         </View>
       </View>
 
       <View style={styles.tableWrapper}>
-        <Text style={styles.sectionTitle}>Today&apos;s Attendance</Text>
+        <Text style={styles.sectionTitle}>Today's Attendance</Text>
 
         <View style={styles.detailsTable}>
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>ERP ID</Text>
-            <Text style={styles.detailValue}>{attendance.erpId}</Text>
+            <Text style={styles.detailValue}>{attendance?.erpId}</Text>
           </View>
 
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Login</Text>
-            <Text style={styles.detailValue}>{attendance.loginTime}</Text>
+            <Text style={styles.detailValue}>{attendance?.loginTime}</Text>
           </View>
 
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Logout</Text>
-            <Text style={styles.detailValue}>{attendance.logoutTime}</Text>
+            <Text style={styles.detailValue}>{attendance?.logoutTime}</Text>
           </View>
 
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Total Hours</Text>
-            <Text style={styles.detailValue}>{attendance.totalHours.toFixed(2)}</Text>
+            <Text style={styles.detailValue}>
+              {attendance?.totalHours.toFixed(2)}
+            </Text>
           </View>
         </View>
       </View>
@@ -213,29 +201,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#0f172a',
-    paddingHorizontal: 20,
   },
   loadingText: {
     color: '#fff',
     marginTop: 10,
-    textAlign: 'center',
   },
   errorText: {
     color: '#fca5a5',
     marginBottom: 12,
-    textAlign: 'center',
-    fontWeight: '600',
   },
   retryButton: {
-    marginTop: 8,
-    paddingVertical: 9,
-    paddingHorizontal: 16,
-    borderRadius: 10,
+    padding: 10,
     backgroundColor: '#3b82f6',
+    borderRadius: 10,
   },
   retryText: {
     color: '#fff',
-    fontWeight: '700',
   },
   heroCard: {
     backgroundColor: '#1d4ed8',
@@ -244,7 +225,6 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     color: '#dbeafe',
-    fontWeight: '600',
   },
   title: {
     color: '#fff',
@@ -253,14 +233,14 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: '#e0ecff',
-    marginTop: 6,
   },
   logoutButton: {
     marginTop: 12,
-    padding: 8,
-    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     backgroundColor: '#ef4444',
-    alignSelf: 'flex-start',
+    borderRadius: 10,
+    alignSelf: 'flex-start', // 🔥 FIX
   },
   logoutText: {
     color: '#fff',

@@ -12,30 +12,29 @@ type AuthUser = {
 
 export default function HomeTab() {
   const router = useRouter();
+
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasRedirected, setHasRedirected] = useState(false); // ✅ NEW
 
   const apiBaseUrl = useMemo(
-    () => process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:5000',
+    () => process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.177.250:5000',
     []
   );
 
   useEffect(() => {
     const loadAuth = async () => {
       try {
-        const savedToken = await AsyncStorage.getItem('authToken');
-        const savedUser = await AsyncStorage.getItem('authUser');
-        
+        const savedToken = await AsyncStorage.getItem('token');
+        const savedUser = await AsyncStorage.getItem('user');
+
         if (savedToken && savedUser) {
           setToken(savedToken);
           setUser(JSON.parse(savedUser));
-        } else {
-          router.replace('/');
         }
       } catch (error) {
-        console.error('Error loading auth:', error);
-        router.replace('/');
+        console.log('Error loading auth:', error);
       } finally {
         setLoading(false);
       }
@@ -44,21 +43,28 @@ export default function HomeTab() {
     loadAuth();
   }, []);
 
+  // ✅ SAFE redirect (only once)
+  useEffect(() => {
+    if (!loading && (!token || !user) && !hasRedirected) {
+      setHasRedirected(true);
+      router.replace('/');
+    }
+  }, [token, user, loading, hasRedirected]);
+
   const handleLogout = async () => {
-    await AsyncStorage.removeItem('authToken');
-    await AsyncStorage.removeItem('authUser');
-    setToken(null);
-    setUser(null);
-    router.replace('/');
+    try {
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
+
+      setToken(null);
+      setUser(null);
+    } catch (error) {
+      console.log('Logout error:', error);
+    }
   };
 
-  if (loading) {
-    return null;
-  }
-
-  if (!token || !user) {
-    return null;
-  }
+  if (loading) return null;
+  if (!token || !user) return null;
 
   return (
     <HomeComponent
