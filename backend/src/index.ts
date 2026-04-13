@@ -39,7 +39,7 @@ app.post("/api/auth/store-fcm-token", authenticateRequest, async (req: any, res)
     if (!fcmToken) {
       return res.status(400).json({ error: "FCM token is required" });
     }
-    
+
     const { error } = await supabase
       .from('fcm_tokens')
       .upsert(
@@ -87,20 +87,6 @@ app.get("/api/attendance", authenticateRequest, async (req: any, res) => {
 
       console.log(data);
 
-    // if (!error && (!data || data.length === 0) && /^\d+$/.test(erpIdRaw)) {
-    //   const erpIdAsNumber = Number(erpIdRaw);
-    //   const fallback = await supabase
-    //     .from("attendance_logs")
-    //     .select("*")
-    //     .eq("erpid", erpIdAsNumber)
-    //     .order("date", { ascending: false });
-
-    //   data = fallback.data;
-    //   error = fallback.error;
-    // }
-
-    // console.log("Attendance rows:", data?.length ?? 0);
-
     if (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -139,6 +125,8 @@ app.post("/api/attendance", authenticateRequest, async (req: any, res) => {
 
 app.use("/api", notificationRoutes);
 
-app.listen(5000, "0.0.0.0", () => {
-  console.log("Server running on port 5000");
+const PORT = Number(process.env.PORT) || 5000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
 });

@@ -20,10 +20,7 @@ export default function Login() {
 
   const router = useRouter();
 
-  const apiBaseUrl = useMemo(
-    () => process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.177.250:5000',
-    []
-  );
+  const apiBaseUrl = 'http://192.168.177.250:5000';
 
   // 🔥 Load saved login on app start
   useEffect(() => {

@@ -6,7 +6,7 @@ async function testInsertAttendance() {
       const now = new Date();
 
       const testData = {
-          erpid: '24510742',
+          erpid: '23511356',
           date: now.toISOString().split('T')[0],
           login_time: new Date().toISOString(),  // ✅ full timestamp
           logout_time: new Date().toISOString(), // ✅ full timestamp
