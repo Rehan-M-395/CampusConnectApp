@@ -60,18 +60,26 @@ app.post("/api/auth/store-fcm-token", authenticateRequest, async (req: any, res)
 });
 
 app.post("/api/send-notification", async (req, res) => {
-  console.log("🔥 RAW BODY:", req.body);
+  console.log("🔥 RAW BODY:", JSON.stringify(req.body));
 
-  // ✅ handle both cases
-  const erpid =
-    req.body.erpid ||
-    req.body?.body?.erpid ||
-    Object.values(req.body)[0]; // fallback
+  let erpid = null;
 
-  console.log("✅ Parsed ERPID:", erpid);
+  // Try all possible formats
+  if (req.body.erpid) {
+    erpid = req.body.erpid;
+  } else if (req.body.body?.erpid) {
+    erpid = req.body.body.erpid;
+  } else {
+    const values = Object.values(req.body);
+    if (values.length > 0) {
+      erpid = values[0];
+    }
+  }
+
+  console.log("✅ FINAL ERPID:", erpid);
 
   if (!erpid) {
-    return res.status(400).json({ error: "erpid is required" });
+    return res.status(400).json({ error: "erpid not found" });
   }
 
   await sendNotification(erpid);
