@@ -109,6 +109,27 @@ app.post("/api/send-notification", async (req, res) => {
   }
 });
 
+app.get("/api/attendance", authenticateRequest, async (req: any, res) => {
+  try {
+    const erpId = req.authUser?.erpId;
+
+    const { data, error } = await supabase
+      .from("attendance_logs")
+      .select("*")
+      .eq("erpid", erpId)
+      .order("date", { ascending: false })
+      .limit(1);
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.json({ attendance: data });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 app.post("/api/attendance", authenticateRequest, async (req: any, res) => {
   try {
     const erpId = req.authUser?.erpId;
