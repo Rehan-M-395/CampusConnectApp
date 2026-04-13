@@ -15,7 +15,7 @@ export const saveToken = async (req: Request, res: Response) => {
       .from('fcm_tokens')
       .upsert(
         { erpid, token },
-        { onConflict: 'token' } // Assuming token is unique
+        { onConflict: 'erpid' } // Assuming token is unique
       );
 
     if (error) {

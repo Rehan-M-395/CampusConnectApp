@@ -67,11 +67,24 @@ export async function sendNotification(erpid: string) {
         response.responses.forEach(async (resp, idx) => {
             if (!resp.success) {
                 const token = registrationTokens[idx];
+                const errorCode = resp.error?.code;
 
-                await supabase
-                    .from('fcm_tokens')
-                    .delete()
-                    .eq('token', token);
+                console.log("❌ Firebase error:", errorCode);
+
+                // ✅ Delete ONLY if token is permanently invalid
+                if (
+                    errorCode === 'messaging/registration-token-not-registered' ||
+                    errorCode === 'messaging/invalid-registration-token'
+                ) {
+                    console.log("🗑️ ting invalid token:", token);
+
+                    // await supabase
+                    //     .from('fcm_tokens')
+                    //     .delete()
+                    //     .eq('token', token);
+                } else {
+                    console.log("⚠️ Temporary error, NOT deleting token");
+                }
             }
         });
 
