@@ -192,7 +192,8 @@ export default function HomeComponent({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0f172a',
+   // backgroundColor: '#0f172a',
+    backgroundColor:'#7f1d1d',
     paddingTop: 24,
     paddingHorizontal: 16,
   },
@@ -200,7 +201,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0f172a',
+    backgroundColor: '#7f1d1d',
   },
   loadingText: {
     color: '#fff',
@@ -219,7 +220,8 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   heroCard: {
-    backgroundColor: '#1d4ed8',
+ //   backgroundColor: '#1d4ed8',
+ backgroundColor:'#7f1d1d',
     borderRadius: 16,
     padding: 16,
   },
@@ -253,7 +255,9 @@ const styles = StyleSheet.create({
   },
   statChip: {
     flex: 1,
-    backgroundColor: '#1e40af',
+  //  backgroundColor: '#1e40af',
+    backgroundColor: '#7f1d1d',
+
     padding: 10,
     borderRadius: 10,
   },
@@ -266,7 +270,8 @@ const styles = StyleSheet.create({
   },
   tableWrapper: {
     marginTop: 20,
-    backgroundColor: '#1e293b',
+  //  backgroundColor: '#1e293b',
+  backgroundColor:'#7f1d1d',
     padding: 14,
     borderRadius: 14,
   },
@@ -283,7 +288,8 @@ const styles = StyleSheet.create({
   },
   detailItem: {
     width: '48%',
-    backgroundColor: '#0f172a',
+  //  backgroundColor: '#0f172a',
+  backgroundColor:'#7f1d1d',
     padding: 10,
     borderRadius: 10,
   },

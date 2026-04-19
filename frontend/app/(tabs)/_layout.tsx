@@ -23,7 +23,8 @@ export default function TabLayout() {
         tabBarAllowFontScaling: false,
         tabBarActiveTintColor: '#dbeafe',
         tabBarInactiveTintColor: '#94a3b8',
-        tabBarActiveBackgroundColor: '#1e40af',
+       // tabBarActiveBackgroundColor: '#1e40af',
+       tabBarActiveBackgroundColor: '#e09c15',
         tabBarIconStyle: styles.tabBarIcon,
         tabBarItemStyle: styles.tabBarItem,
         tabBarStyle: [
@@ -70,10 +71,10 @@ const styles = StyleSheet.create({
   tabBar: {
     position: 'relative',
     borderTopWidth: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor:  '#7f1d1d',
     borderRadius: 0,
     elevation: 0,
-    shadowColor: '#020617',
+   
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0,
     shadowRadius: 0,

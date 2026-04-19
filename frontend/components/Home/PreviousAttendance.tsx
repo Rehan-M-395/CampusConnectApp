@@ -2,6 +2,9 @@ import { useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
+const TABLE_VISIBLE_ROWS = 4;
+const TABLE_ROW_HEIGHT = 42;
+
 type Row = {
    
     erpId: string;
@@ -17,10 +20,16 @@ const rows: Row[] = [
     {  erpId: 'ERP001', Shift: "9:00 AM to 6:00 PM", LoginTime: 10.00, LogoutTime: 18.00, Day: 'Monday', Date: '2023-10-01', TotalHours: 8 },
     {  erpId: 'ERP001', Shift: "2:00 PM to 10:00 PM", LoginTime: 14.00, LogoutTime: 22.00, Day: 'Tuesday', Date: '2023-10-02', TotalHours: 8 },
     {  erpId: 'ERP001', Shift: "9:00 AM to 6:00 PM", LoginTime: 10.00, LogoutTime: 18.00, Day: 'Wednesday', Date: '2023-10-03', TotalHours: 8 },
+     {  erpId: 'ERP001', Shift: "9:00 AM to 6:00 PM", LoginTime: 10.00, LogoutTime: 18.00, Day: 'Monday', Date: '2023-10-05', TotalHours: 8 },
+    {  erpId: 'ERP001', Shift: "2:00 PM to 10:00 PM", LoginTime: 14.00, LogoutTime: 22.00, Day: 'Tuesday', Date: '2023-10-07', TotalHours: 8 },
+    {  erpId: 'ERP001', Shift: "9:00 AM to 6:00 PM", LoginTime: 10.00, LogoutTime: 18.00, Day: 'Wednesday', Date: '2023-10-09', TotalHours: 8 },
+     {  erpId: 'ERP001', Shift: "9:00 AM to 6:00 PM", LoginTime: 10.00, LogoutTime: 18.00, Day: 'Monday', Date: '2023-10-06', TotalHours: 8 },
+
+];
+
 
     
 
-];
 
 const formatDate = (date: Date) => {
     const year = date.getFullYear();
@@ -35,7 +44,11 @@ export default function PreviousAttendance() {
     const [selectedDay, setSelectedDay] = useState('All');
     const [selectedDate, setSelectedDate] = useState('All');
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const [datePickerValue, setDatePickerValue] = useState(new Date(`${rows[0].Date}T00:00:00`));
+    const [datePickerValue, setDatePickerValue] = useState(() => {
+        const firstRowDate = rows[0]?.Date;
+
+        return firstRowDate ? new Date(`${firstRowDate}T00:00:00`) : new Date();
+    });
     const tableRef = useRef<ScrollView>(null);
     const filterRef = useRef<ScrollView>(null);
     const dayOptions = useMemo(() => ['All', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], []);
@@ -172,23 +185,30 @@ export default function PreviousAttendance() {
                             <Text style={[styles.cell, styles.headerCell]}>Hours</Text>
                         </View>
 
-                        {filteredRows.length > 0 ? (
-                            filteredRows.map((row) => (
-                                <View key={`${row.erpId}-${row.Date}`} style={styles.row}>
-                                    <Text style={styles.cell}>{row.erpId}</Text>
-                                    <Text style={styles.cell}>{row.Shift}</Text>
-                                    <Text style={styles.cell}>{row.Day}</Text>
-                                    <Text style={styles.cell}>{row.Date}</Text>
-                                    <Text style={styles.cell}>{row.LoginTime.toFixed(2)} AM</Text>
-                                    <Text style={styles.cell}>{row.LogoutTime.toFixed(2)} PM</Text>
-                                    <Text style={styles.cell}>{row.TotalHours.toFixed(2)}</Text>
+                        <ScrollView
+                            nestedScrollEnabled
+                            showsVerticalScrollIndicator
+                            style={styles.rowsScroll}
+                            contentContainerStyle={styles.rowsScrollContent}
+                        >
+                            {filteredRows.length > 0 ? (
+                                filteredRows.map((row) => (
+                                    <View key={`${row.erpId}-${row.Date}`} style={styles.row}>
+                                        <Text style={styles.cell}>{row.erpId}</Text>
+                                        <Text style={styles.cell}>{row.Shift}</Text>
+                                        <Text style={styles.cell}>{row.Day}</Text>
+                                        <Text style={styles.cell}>{row.Date}</Text>
+                                        <Text style={styles.cell}>{row.LoginTime.toFixed(2)} AM</Text>
+                                        <Text style={styles.cell}>{row.LogoutTime.toFixed(2)} PM</Text>
+                                        <Text style={styles.cell}>{row.TotalHours.toFixed(2)}</Text>
+                                    </View>
+                                ))
+                            ) : (
+                                <View style={styles.emptyStateRow}>
+                                    <Text style={styles.emptyStateText}>No records found.</Text>
                                 </View>
-                            ))
-                        ) : (
-                            <View style={styles.emptyStateRow}>
-                                <Text style={styles.emptyStateText}>No records found.</Text>
-                            </View>
-                        )}
+                            )}
+                        </ScrollView>
                     </View>
                 </ScrollView>
             </View>
@@ -199,7 +219,8 @@ export default function PreviousAttendance() {
 const styles = StyleSheet.create({
     screen: {
         flex: 1,
-        backgroundColor: '#0f172a',
+        // backgroundColor: '#0f172a',
+        backgroundColor:'#7f1d1d',
         justifyContent: 'center',
         paddingHorizontal: 16,
         alignItems: 'center',
@@ -220,11 +241,12 @@ const styles = StyleSheet.create({
         width: '100%',
         maxWidth: 420,
         alignSelf: 'center',
-        backgroundColor: '#1e293b',
+      //  backgroundColor: '#1e293b',
+      backgroundColor:'#7f1d1d',
         borderRadius: 14,
         padding: 14,
         borderWidth: 1,
-        borderColor: '#334155',
+        borderColor: '#e09c15',
     },
     title: {
         color: '#ffffff',
@@ -244,15 +266,22 @@ const styles = StyleSheet.create({
     modeBtn: {
         flex: 1,
         borderWidth: 1,
-        borderColor: '#475569',
-        backgroundColor: '#0f172a',
+        // borderColor: '#475569',
+        // backgroundColor: '#0f172a',
+         //backgroundColor: '#d1a550',
+       // backgroundColor:'#7f1d1d',
+        borderColor:'#e09c15',
+        
         paddingVertical: 8,
         borderRadius: 8,
         alignItems: 'center',
     },
     modeBtnActive: {
-        backgroundColor: '#2563eb',
-        borderColor: '#60a5fa',
+        // backgroundColor: '#2563eb',
+        // borderColor: '#60a5fa',
+    //     backgroundColor:'#7f1d1d',
+          backgroundColor: '#d1a550',
+        borderColor:'#e09c15',
     },
     modeBtnText: {
         color: '#94a3b8',
@@ -279,7 +308,7 @@ const styles = StyleSheet.create({
         width: 30,
         height: 26,
         borderRadius: 6,
-        backgroundColor: '#334155',
+        backgroundColor: '#7f1d1d',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -288,7 +317,8 @@ const styles = StyleSheet.create({
         fontWeight: '700',
     },
     filterChip: {
-        backgroundColor: '#0f172a',
+        // backgroundColor: '#0f172a',
+        backgroundColor: '#7f1d1d',
         borderColor: '#334155',
         borderWidth: 1,
         paddingVertical: 7,
@@ -297,7 +327,8 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     filterChipActive: {
-        backgroundColor: '#1d4ed8',
+       // backgroundColor: '#1d4ed8',
+         backgroundColor: '#e09c15',
         borderColor: '#60a5fa',
     },
     filterChipText: {
@@ -316,7 +347,8 @@ const styles = StyleSheet.create({
     },
     datePickerBtn: {
         flex: 1,
-        backgroundColor: '#0f172a',
+      //  backgroundColor: '#0f172a',
+      backgroundColor: '#7f1d1d',
         borderWidth: 1,
         borderColor: '#334155',
         borderRadius: 8,
@@ -340,7 +372,8 @@ const styles = StyleSheet.create({
     },
     controlBtn: {
         flex: 1,
-        backgroundColor: '#334155',
+      //  backgroundColor: '#334155',
+      backgroundColor: '#e09c15',
         borderRadius: 8,
         paddingVertical: 8,
         alignItems: 'center',
@@ -356,15 +389,25 @@ const styles = StyleSheet.create({
     tableContent: {
         width: 805,
     },
+    rowsScroll: {
+        maxHeight: TABLE_VISIBLE_ROWS * TABLE_ROW_HEIGHT,
+    },
+    rowsScrollContent: {
+        paddingBottom: 2,
+    },
     row: {
         flexDirection: 'row',
         borderBottomWidth: 1,
-        borderBottomColor: '#334155',
+      //  borderBottomColor: '#334155',
+      borderBottomColor:'#e09c15',
+        minHeight: TABLE_ROW_HEIGHT,
+        alignItems: 'center',
         paddingVertical: 9,
     },
     headerRow: {
         borderBottomColor: '#475569',
-        backgroundColor: '#0f172a',
+        //backgroundColor: '#0f172a',
+        backgroundColor: '#e09c15',
         borderRadius: 8,
         paddingHorizontal: 2,
     },
