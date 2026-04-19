@@ -102,7 +102,20 @@ export async function sendNotification(
                     attendanceType: eventType,
                     erpid: erpidStr, // must be string
                 },
-                android: { priority: 'high' },
+                android: {
+                    priority: 'high',
+                    notification: {
+                        channelId: 'attendance_alerts',
+                        sound: 'attendance_tone',
+                    },
+                },
+                apns: {
+                    payload: {
+                        aps: {
+                            sound: 'default',
+                        },
+                    },
+                },
             };
 
             const resp = await messaging.sendEachForMulticast(message);
