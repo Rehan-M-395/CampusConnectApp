@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, RefreshControl, ActivityIndicator } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,8 +18,10 @@ type AttendanceApiRow = {
   date?: string | null;
 };
 
+
+
 const formatDate = (date: Date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()}`;
 
 const formatMonth = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -34,8 +36,11 @@ const toDayName = (dateStr?: string | null) => {
   return new Date(`${dateStr}T00:00:00`).toLocaleDateString('en-US', { weekday: 'long' });
 };
 
+
+
 export default function PreviousAttendance() {
   const [rows, setRows] = useState<Row[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
   const [filterMode, setFilterMode] = useState<'date' | 'month'>('date');
   const [selectedDate, setSelectedDate] = useState('All');
   const [selectedMonth, setSelectedMonth] = useState('All');
@@ -43,8 +48,11 @@ export default function PreviousAttendance() {
   const [datePickerValue, setDatePickerValue] = useState(new Date());
   const tableRef = useRef<ScrollView>(null);
 
-  useEffect(() => {
-    const fetchHistory = async () => {
+  const [fromDate, setFromDate] = useState<Date | null>(null);
+  const [toDate, setToDate] = useState<Date | null>(null);
+  const [pickerMode, setPickerMode] = useState<'from' | 'to' | null>(null);
+
+  const fetchHistory = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
         if (!token) return;
@@ -83,19 +91,61 @@ export default function PreviousAttendance() {
       }
     };
 
+    const handleRefresh = async () => {
+      setRefreshing(true);
+      await fetchHistory();
+      setRefreshing(false);
+    };
+
+  useEffect(() => {
     fetchHistory();
   }, []);
 
   const filteredRows = useMemo(() => {
-    if (filterMode === 'date') {
-      return rows.filter((r) => selectedDate === 'All' || r.Date === selectedDate);
-    }
-    return rows.filter((r) => selectedMonth === 'All' || r.Date.slice(0, 7) === selectedMonth);
-  }, [rows, filterMode, selectedDate, selectedMonth]);
+  if (filterMode === 'date') {
+    if (selectedDate === 'All') return rows;
+
+    const [day, month, year] = selectedDate.split('-');
+    const selected = new Date(`${year}-${month}-${day}T00:00:00`);
+    const weekStart = new Date(selected);
+    weekStart.setDate(selected.getDate() - selected.getDay());
+
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    return rows.filter((r) => {
+      const d = new Date(r.Date + 'T00:00:00');
+      return d >= weekStart && d <= weekEnd;
+    });
+  }
+
+  if (filterMode === 'month') {
+    if (!fromDate || !toDate) return rows;
+
+    const start = fromDate < toDate ? fromDate : toDate;
+    const end = fromDate < toDate ? toDate : fromDate;
+
+    // 🔥 make "to" inclusive (end of day)
+    const endOfDay = new Date(end);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    return rows.filter((r) => {
+      const d = new Date(r.Date + 'T00:00:00');
+      return d >= start && d <= endOfDay;
+    });
+  }
+
+  return rows;
+}, [rows, filterMode, selectedDate, fromDate, toDate]);
 
   const onDateChange = (_: any, date?: Date) => {
     if (Platform.OS === 'android') setShowDatePicker(false);
     if (!date) return;
+    if (filterMode === 'month' && pickerMode) {
+    if (pickerMode === 'from') setFromDate(date);
+      else setToDate(date);
+      return;
+    }
     setDatePickerValue(date);
     filterMode === 'date'
       ? setSelectedDate(formatDate(date))
@@ -138,12 +188,77 @@ export default function PreviousAttendance() {
           </TouchableOpacity>
         </View>
 
+        {filterMode === 'date' && (
+          <View style={styles.refreshHintWrapper}>
+            {refreshing ? (
+              <View style={styles.refreshRow}>
+                <ActivityIndicator size="small" color="#7f1d1d" />
+                <Text style={styles.refreshHintText}>Updating...</Text>
+              </View>
+            ) : (
+              <Text style={styles.refreshHintText}>* Slide down to refresh</Text>
+            )}
+          </View>
+        )}
+
+        <View style={styles.dateFilterRow}></View>
+        {filterMode === 'month' && (<>
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+          
+          <TouchableOpacity
+            style={[styles.datePickerBtn, { flex: 1 }]}
+            onPress={() => {
+              setPickerMode('from');
+              setShowDatePicker(true);
+            }}
+          >
+            <Text style={styles.datePickerBtnText}>
+              {fromDate ? formatDate(fromDate) : 'From'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.datePickerBtn, { flex: 1 }]}
+            onPress={() => {
+              setPickerMode('to');
+              setShowDatePicker(true);
+            }}
+          >
+            <Text style={styles.datePickerBtnText}>
+              {toDate ? formatDate(toDate) : 'To'}
+            </Text>
+          </TouchableOpacity>
+
+          </View>
+          <View style={styles.refreshHintWrapper}>
+            {refreshing ? (
+              <View style={styles.refreshRow}>
+                <ActivityIndicator size="small" color="#7f1d1d" />
+                <Text style={styles.refreshHintText}>Updating...</Text>
+              </View>
+            ) : (
+              <Text style={styles.refreshHintText}>* Slide down to refresh</Text>
+            )}
+          </View>
+        </>
+      )}
+          
+
         {showDatePicker && (
           <DateTimePicker value={datePickerValue} mode="date" onChange={onDateChange} />
         )}
 
         {/* TABLE */}
-        <ScrollView>
+        <ScrollView
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={['#7f1d1d']}
+                tintColor="#7f1d1d"
+              />
+            }
+          >
           <ScrollView horizontal ref={tableRef}>
             <View style={styles.tableContent}>
 
@@ -164,7 +279,11 @@ export default function PreviousAttendance() {
               ) : (
                 filteredRows.map((row, i) => (
                   <View key={i} style={[styles.row, i % 2 === 0 ? styles.rowEven : styles.rowOdd]}>
-                    <Text style={styles.cell}>{row.Date}</Text>
+                    <Text style={styles.cell}>
+                      {row.Date !== '--'
+                        ? formatDate(new Date(row.Date + 'T00:00:00'))
+                        : '--'}
+                    </Text>
                     <Text style={styles.cell}>{row.Day}</Text>
                     <Text style={styles.cell}>{row.LoginTime}</Text>
                     <Text style={styles.cell}>{row.LogoutTime}</Text>
@@ -279,5 +398,21 @@ const styles = StyleSheet.create({
     color: '#7f1d1d',
     fontWeight: '600',
     fontSize: 14,
+  },
+  refreshHintWrapper: {
+    alignItems: 'flex-end',
+    marginBottom: 10,
+  },
+
+  refreshRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+
+  refreshHintText: {
+    fontSize: 11,
+    color: '#9e7b6e',
+    fontWeight: '500',
   },
 });

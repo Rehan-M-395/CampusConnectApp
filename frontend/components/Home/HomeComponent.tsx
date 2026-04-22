@@ -39,6 +39,12 @@ const formatTime = (value: string | null) => {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
+const formatDate = (dateStr: string | null) => {
+  if (!dateStr) return '--';
+  const date = new Date(dateStr + 'T00:00:00');
+  return `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()}`;
+};
+
 export default function HomeComponent({
   user,
   token,
@@ -99,7 +105,7 @@ export default function HomeComponent({
         erpId: latest.erpid ?? user?.erpId ?? '',
         loginTime: formatTime(loginDate),
         logoutTime: formatTime(logoutDate),
-        date: latest.date ?? '--',
+        date: formatDate(latest.date),
         totalHours,
       });
     } catch {
@@ -156,16 +162,23 @@ export default function HomeComponent({
   // 🔥 Main UI (your original design)
   return (
     <SafeAreaView style={styles.screen}>
+      <ScrollView
+        contentContainerStyle={styles.screenContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#7f1d1d']}
+            tintColor="#7f1d1d"
+          />
+        }
+      >
       <View style={styles.heroCard}>
 
         <Text style={styles.welcomeText}>Welcome back</Text>
         <View style={styles.user}>
         <Text style={styles.title}>{attendance?.name ?? user?.name ?? 'Faculty'}</Text>         
-
-       
-
              
-
         {onLogout && (
           <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
             <Text style={styles.logoutText}>Logout</Text>
@@ -194,12 +207,16 @@ export default function HomeComponent({
       <View style={styles.tableWrapper}>
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>Today's Attendance</Text>
-          {refreshing && (
-            <View style={styles.sectionRefreshingBadge}>
+          <View style={styles.sectionRefreshingBadge}>
+          {refreshing ? (
+            <>
               <ActivityIndicator size="small" color="#7f1d1d" />
               <Text style={styles.sectionRefreshingText}>Updating...</Text>
-            </View>
+            </>
+          ) : (
+            <Text style={styles.slideHintText}>* Slide down to refresh</Text>
           )}
+        </View>
         </View>
 
         {!hasAttendanceData ? (
@@ -238,6 +255,7 @@ export default function HomeComponent({
       
 
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -319,8 +337,8 @@ const styles = StyleSheet.create({
     alignSelf: 'auto',
   },
   logoutText: {
- //   color: '#FFF8F0',
- color:'#db0b0b',
+    color: '#FFF8F0',
+    // color:'#db0b0b',
     fontWeight: '700',
   },
   statsRow: {
@@ -407,4 +425,9 @@ const styles = StyleSheet.create({
     color: '#7f1d1d',
     fontWeight: '700',
   },
+  slideHintText: {
+  color: '#9e7b6e',
+  fontSize: 12,
+  fontWeight: '500',
+},
 });
