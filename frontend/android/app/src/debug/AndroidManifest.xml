@@ -9,7 +9,7 @@
         <!-- Fix Firebase conflict -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="attendance_alerts"
+            android:value="attendance_alerts_v2"
             tools:replace="android:value" />
 
     </application>

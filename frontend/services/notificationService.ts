@@ -64,6 +64,28 @@ export async function getFCMToken() {
   }
 }
 
+export async function clearFCMToken() {
+  try {
+    await messaging().deleteToken();
+    console.log('FCM token cleared');
+  } catch (error) {
+    console.warn('Failed to clear FCM token:', error);
+  }
+}
+
+export async function removeStoredFCMToken(apiBaseUrl: string, authToken: string) {
+  try {
+    await fetch(`${apiBaseUrl}/api/auth/remove-fcm-token`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+  } catch (error) {
+    console.warn('Failed to remove stored FCM token:', error);
+  }
+}
+
 export function setupForegroundListener() {
   try {
     return messaging().onMessage(async remoteMessage => {

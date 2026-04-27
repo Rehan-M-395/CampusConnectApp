@@ -18,6 +18,8 @@ type LoginComponentProps = {
   onLoginSuccess: (token: string, user: AuthUser) => void;
 };
 
+const LAST_LOGIN_CREDENTIALS_KEY = 'last_login_credentials';
+
 
 
 export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComponentProps) {
@@ -26,6 +28,40 @@ export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComp
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    const loadSavedCredentials = async () => {
+      try {
+        const savedCredentials = await AsyncStorage.getItem(LAST_LOGIN_CREDENTIALS_KEY);
+
+        if (savedCredentials) {
+          const parsedCredentials = JSON.parse(savedCredentials) as {
+            erpId?: string;
+            password?: string;
+          };
+
+          setErpId(parsedCredentials.erpId ?? '');
+          setPassword(parsedCredentials.password ?? '');
+          return;
+        }
+
+     
+      
+
+        const savedUser = await AsyncStorage.getItem('user');
+        if  (savedUser) {
+          const parsedUser = JSON.parse(savedUser) as Partial<AuthUser>;
+          if (parsedUser.erpId) {
+            setErpId(parsedUser.erpId);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load saved credentials:', error);
+      }
+    };
+
+    loadSavedCredentials();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = setupTokenRefresh(async (newToken) => {
@@ -81,6 +117,14 @@ export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComp
         setErrorMessage(loginError ?? 'Login failed. Please check your ERP ID and password.');
         return;
       }
+
+      await AsyncStorage.setItem(
+        LAST_LOGIN_CREDENTIALS_KEY,
+        JSON.stringify({
+          erpId: trimmedErpId,
+          password,
+        })
+      );
 
       await AsyncStorage.setItem('token', payload.token);
       await AsyncStorage.setItem('user', JSON.stringify(payload.user));
@@ -332,6 +376,34 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(148, 163, 184, 0.18)',
     fontSize: 15,
+  },
+  usedIdContainer: {
+    width: '100%',
+    marginBottom: 10,
+  },
+  usedIdLabel: {
+    color: '#f8fafc',
+    fontSize: 12,
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  usedIdList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  usedIdChip: {
+    backgroundColor: '#e1d2d2',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.3)',
+  },
+  usedIdText: {
+    color: '#0f172a',
+    fontSize: 12,
+    fontWeight: '600',
   },
   button: {
     width: '100%',

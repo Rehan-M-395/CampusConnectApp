@@ -25,11 +25,11 @@ class MainApplication : Application(), ReactApplication {
   private fun ensureAttendanceNotificationChannel() {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
 
-    val channelId = "attendance_alerts"
+    val channelId = "attendance_alerts_v2"
     val channelName = "Attendance Alerts"
     val manager = getSystemService(NotificationManager::class.java) ?: return
 
-    val soundUri: Uri = Uri.parse("android.resource://$packageName/raw/attendance_tone")
+    val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
     val audioAttributes = AudioAttributes.Builder()
       .setUsage(AudioAttributes.USAGE_NOTIFICATION)
       .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)

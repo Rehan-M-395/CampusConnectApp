@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LoginComponent from '../components/Logins/LoginComponent';
-import { requestNotificationPermission, setupForegroundListener , setupBackgroundHandler } from '../services/notificationService';
+import { requestNotificationPermission, setupForegroundListener , setupBackgroundHandler, clearFCMToken, removeStoredFCMToken } from '../services/notificationService';
 
 type AuthUser = {
   id: string;
@@ -83,6 +83,12 @@ export default function Login() {
   // 🚪 Logout handler
   const handleLogout = async () => {
     try {
+      const savedToken = await AsyncStorage.getItem('token');
+      if (savedToken) {
+        await removeStoredFCMToken(apiBaseUrl, savedToken);
+      }
+
+      await clearFCMToken();
       await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('user');
 
