@@ -207,13 +207,13 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     position: 'absolute',
-    top: '8%',
+    top: '7%',
     width: '100%',
     alignItems: 'center',
   },
    logo: {
-    width: 270,
-    height: 270,
+    width: 250,
+    height: 250,
   },
   backgroundGlowTop: {
     position: 'absolute',
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
  // backgroundColor: 'rgba(15, 23, 42, 0.92)',
     backgroundColor: '#7f1d1d',
     padding: 20,
-    marginTop: 40,
+    marginTop: 120,
     borderRadius: 24,
     borderWidth: 1,
    // borderColor: 'rgba(148, 163, 184, 0.18)',

@@ -384,6 +384,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    maxWidth: '45%', 
   },
   sectionRefreshingText: {
     color: '#7f1d1d',
@@ -431,5 +432,8 @@ const styles = StyleSheet.create({
   color: '#9e7b6e',
   fontSize: 12,
   fontWeight: '500',
+  flexShrink: 1,
+  flexWrap: 'wrap',
+  textAlign: 'right',
 },
 });
