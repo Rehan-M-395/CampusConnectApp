@@ -116,36 +116,134 @@ export default function PreviousAttendance() {
 
   const filteredRows = useMemo(() => {
   if (filterMode === 'date') {
-    if (selectedDate === 'All') return rows;
+    const baseDate =
+      selectedDate === 'All'
+        ? new Date()
+        : new Date(selectedDate.split('-').reverse().join('-') + 'T00:00:00');
 
-    const [day, month, year] = selectedDate.split('-');
-    const selected = new Date(`${year}-${month}-${day}T00:00:00`);
-    const weekStart = new Date(selected);
-    weekStart.setDate(selected.getDate() - selected.getDay());
+    const dayIndex = baseDate.getDay(); // 0 = Sunday
+    const mondayOffset = dayIndex === 0 ? -6 : 1 - dayIndex;
 
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
+    const weekStart = new Date(baseDate);
+    weekStart.setDate(baseDate.getDate() + mondayOffset);
+    weekStart.setHours(0, 0, 0, 0);
 
-    return rows.filter((r) => {
-      const d = new Date(r.Date + 'T00:00:00');
-      return d >= weekStart && d <= weekEnd;
+    // ✅ generate 7 days (Mon → Sun)
+    const weekDates: string[] = [];
+
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + i);
+
+      if (d > today) break;
+
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+
+      weekDates.push(`${yyyy}-${mm}-${dd}`);
+    }
+
+    // ✅ map existing rows
+    const rowMap = new Map(rows.map((r) => [r.Date, r]));
+
+    // ✅ build final 7 rows
+    return weekDates.map((dateStr) => {
+      if (rowMap.has(dateStr)) {
+        return rowMap.get(dateStr)!;
+      }
+
+      return {
+        Date: dateStr,
+        Day: toDayName(dateStr),
+        LoginTime: '--',
+        LogoutTime: '--',
+        TotalHoursLabel: '--',
+      };
     });
   }
 
   if (filterMode === 'month') {
-    if (!fromDate || !toDate) return rows;
+    if (!fromDate || !toDate) {
+  const today = new Date();
 
-    const start = fromDate < toDate ? fromDate : toDate;
-    const end = fromDate < toDate ? toDate : fromDate;
+  const start = new Date(today.getFullYear(), today.getMonth(), 1);
+  start.setHours(0, 0, 0, 0);
 
-    // 🔥 make "to" inclusive (end of day)
-    const endOfDay = new Date(end);
-    endOfDay.setHours(23, 59, 59, 999);
+  const endOfDay = new Date(today);
+  endOfDay.setHours(23, 59, 59, 999);
 
-    return rows.filter((r) => {
-      const d = new Date(r.Date + 'T00:00:00');
-      return d >= start && d <= endOfDay;
-    });
+  // ✅ generate all dates from 1st → today
+  const allDates: string[] = [];
+  const current = new Date(start);
+
+  while (current <= endOfDay) {
+    const yyyy = current.getFullYear();
+    const mm = String(current.getMonth() + 1).padStart(2, '0');
+    const dd = String(current.getDate()).padStart(2, '0');
+
+    allDates.push(`${yyyy}-${mm}-${dd}`);
+    current.setDate(current.getDate() + 1);
+  }
+
+  // ✅ map existing rows
+  const rowMap = new Map(rows.map((r) => [r.Date, r]));
+
+  // ✅ build full timeline
+  return allDates.map((dateStr) => {
+    if (rowMap.has(dateStr)) {
+      return rowMap.get(dateStr)!;
+    }
+
+    return {
+      Date: dateStr,
+      Day: toDayName(dateStr),
+      LoginTime: '--',
+      LogoutTime: '--',
+      TotalHoursLabel: '--',
+    };
+  });
+}
+
+      const start = fromDate < toDate ? fromDate : toDate;
+      const end = fromDate < toDate ? toDate : fromDate;
+
+      const endOfDay = new Date(end);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // ✅ generate all days between start and end
+const allDates: string[] = [];
+
+const current = new Date(start);
+while (current <= endOfDay) {
+  const yyyy = current.getFullYear();
+  const mm = String(current.getMonth() + 1).padStart(2, '0');
+  const dd = String(current.getDate()).padStart(2, '0');
+
+  allDates.push(`${yyyy}-${mm}-${dd}`);
+  current.setDate(current.getDate() + 1);
+}
+
+// ✅ map all rows (IMPORTANT: NOT filtered)
+const rowMap = new Map(rows.map((r) => [r.Date, r]));
+
+// ✅ build final rows (same as date section)
+return allDates.map((dateStr) => {
+  if (rowMap.has(dateStr)) {
+    return rowMap.get(dateStr)!;
+  }
+
+  return {
+    Date: dateStr,
+    Day: toDayName(dateStr),
+    LoginTime: '--',
+    LogoutTime: '--',
+    TotalHoursLabel: '--',
+  };
+});
   }
 
   return rows;
