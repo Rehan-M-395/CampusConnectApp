@@ -56,6 +56,8 @@ const toDayName = (dateStr?: string | null) => {
 
 
 
+
+
 export default function PreviousAttendance() {
   const [rows, setRows] = useState<Row[]>([]);
   const [refreshing, setRefreshing] = useState(false);
