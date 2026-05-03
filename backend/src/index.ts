@@ -2,11 +2,10 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import { supabase } from "./services/supabase";
-import { authenticateRequest } from "./middleware/authMiddleware";
-import { loginWithErpCredentials } from "./services/authService";
-import AuthService from "./services/authService";
+import { authenticateRequest, authorizeRoles } from "./middleware/authMiddleware";
 import { sendNotification } from "./services/firebaseAdmin";
 import notificationRoutes from "./routes/notificationRoutes";
+import authRoutes from "./routes/authRoutes";
 
 dotenv.config();
 
@@ -19,69 +18,7 @@ app.get("/", (_req, res) => {
   res.send("Server is running");
 });
 
-app.post("/api/auth/login", async (req, res) => {
-  try {
-    const loginResponse = await loginWithErpCredentials(req.body);
-    console.log("this is login response",loginResponse);
-    res.json(loginResponse);
-  } catch (error: any) {
-    res.status(401).json({ error: error.message });
-  }
-});
-
-app.post("/api/auth/store-fcm-token", authenticateRequest, async (req: any, res) => {
-  try {
-    const erpId = req.authUser?.erpId;
-    const { fcmToken } = req.body;
-    
-    console.log("this route got hit", erpId);
-
-    if (!fcmToken) {
-      return res.status(400).json({ error: "FCM token is required" });
-    }
-
-    const { error } = await supabase
-      .from('fcm_tokens')
-      .upsert(
-        { erpid: erpId, token: fcmToken },
-        { onConflict: 'token' }
-      );
-
-    if (error) {
-      console.error('Error saving token:', error);
-      return res.status(500).json({ error: 'Failed to save token' });
-    }
-
-    console.log("saved the token")
-    res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post("/api/auth/remove-fcm-token", authenticateRequest, async (req: any, res) => {
-  try {
-    const erpId = req.authUser?.erpId;
-
-    if (!erpId) {
-      return res.status(400).json({ error: "ERP ID is required" });
-    }
-
-    const { error } = await supabase
-      .from("fcm_tokens")
-      .delete()
-      .eq("erpid", erpId);
-
-    if (error) {
-      console.error("Error removing token:", error);
-      return res.status(500).json({ error: "Failed to remove token" });
-    }
-
-    res.json({ success: true });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
+app.use("/api/auth", authRoutes);
 
 app.post("/api/send-notification", async (req, res) => {
   try {
@@ -105,9 +42,17 @@ app.post("/api/send-notification", async (req, res) => {
   }
 });
 
-app.get("/api/attendance", authenticateRequest, async (req: any, res) => {
+app.get(
+  "/api/attendance",
+  authenticateRequest,
+  authorizeRoles("faculty"),
+  async (req: any, res) => {
   try {
     const erpId = req.authUser?.erpId;
+    console.log("[attendance/current] request received", {
+      erpId,
+      role: req.authUser?.role,
+    });
     const todayIst = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Kolkata",
     }).format(new Date());
@@ -129,15 +74,31 @@ app.get("/api/attendance", authenticateRequest, async (req: any, res) => {
       effective_logout_time: item.final_logout_time ?? item.logout_time ?? null,
     }));
 
+    console.log("[attendance/current] success", {
+      erpId,
+      count: normalizedAttendance.length,
+    });
     res.json({ attendance: normalizedAttendance });
   } catch (err) {
+    console.error("[attendance/current] failed", {
+      erpId: req.authUser?.erpId,
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
     res.status(500).json({ error: "Server error" });
   }
 });
 
-app.get("/api/attendance/history", authenticateRequest, async (req: any, res) => {
+app.get(
+  "/api/attendance/history",
+  authenticateRequest,
+  authorizeRoles("faculty"),
+  async (req: any, res) => {
   try {
     const erpId = req.authUser?.erpId;
+    console.log("[attendance/history] request received", {
+      erpId,
+      role: req.authUser?.role,
+    });
 
     const { data, error } = await supabase
       .from("attendance_logs")
@@ -156,16 +117,32 @@ app.get("/api/attendance/history", authenticateRequest, async (req: any, res) =>
       effective_logout_time: item.final_logout_time ?? item.logout_time ?? null,
     }));
 
+    console.log("[attendance/history] success", {
+      erpId,
+      count: normalizedAttendance.length,
+    });
     res.json({ attendance: normalizedAttendance });
   } catch (_err) {
+    console.error("[attendance/history] failed", {
+      erpId: req.authUser?.erpId,
+    });
     res.status(500).json({ error: "Server error" });
   }
 });
 
-app.post("/api/attendance", authenticateRequest, async (req: any, res) => {
+app.post(
+  "/api/attendance",
+  authenticateRequest,
+  authorizeRoles("faculty"),
+  async (req: any, res) => {
   try {
     const erpId = req.authUser?.erpId;
     const attendanceData = req.body; // Assume { date, shift, etc. }
+    console.log("[attendance/create] request received", {
+      erpId,
+      role: req.authUser?.role,
+      date: attendanceData?.date,
+    });
 
     // Insert into attendance_logs
     const { data, error } = await supabase
@@ -180,9 +157,16 @@ app.post("/api/attendance", authenticateRequest, async (req: any, res) => {
     // Trigger notification
     await sendNotification(erpId, "login");
 
+    console.log("[attendance/create] success", {
+      erpId,
+      inserted: data?.length ?? 0,
+    });
     res.json({ success: true, data });
   } catch (err) {
-    console.error("ERROR:", err);
+    console.error("[attendance/create] failed", {
+      erpId: req.authUser?.erpId,
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
     res.status(500).json({ error: "Server error" });
   }
 });

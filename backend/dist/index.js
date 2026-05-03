@@ -17,9 +17,9 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const express_1 = __importDefault(require("express"));
 const supabase_1 = require("./services/supabase");
 const authMiddleware_1 = require("./middleware/authMiddleware");
-const authService_1 = require("./services/authService");
 const firebaseAdmin_1 = require("./services/firebaseAdmin");
 const notificationRoutes_1 = __importDefault(require("./routes/notificationRoutes"));
+const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
@@ -27,39 +27,7 @@ app.use(express_1.default.json());
 app.get("/", (_req, res) => {
     res.send("Server is running");
 });
-app.post("/api/auth/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const loginResponse = yield (0, authService_1.loginWithErpCredentials)(req.body);
-        console.log("this is login response", loginResponse);
-        res.json(loginResponse);
-    }
-    catch (error) {
-        res.status(401).json({ error: error.message });
-    }
-}));
-app.post("/api/auth/store-fcm-token", authMiddleware_1.authenticateRequest, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    try {
-        const erpId = (_a = req.authUser) === null || _a === void 0 ? void 0 : _a.erpId;
-        const { fcmToken } = req.body;
-        console.log("this route got hit", erpId);
-        if (!fcmToken) {
-            return res.status(400).json({ error: "FCM token is required" });
-        }
-        const { error } = yield supabase_1.supabase
-            .from('fcm_tokens')
-            .upsert({ erpid: erpId, token: fcmToken }, { onConflict: 'token' });
-        if (error) {
-            console.error('Error saving token:', error);
-            return res.status(500).json({ error: 'Failed to save token' });
-        }
-        console.log("saved the token");
-        res.json({ success: true });
-    }
-    catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-}));
+app.use("/api/auth", authRoutes_1.default);
 app.post("/api/send-notification", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log("🔥 RAW BODY:", req.body);
@@ -77,10 +45,14 @@ app.post("/api/send-notification", (req, res) => __awaiter(void 0, void 0, void 
         res.status(500).json({ error: error.message });
     }
 }));
-app.get("/api/attendance", authMiddleware_1.authenticateRequest, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+app.get("/api/attendance", authMiddleware_1.authenticateRequest, (0, authMiddleware_1.authorizeRoles)("faculty"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
     try {
         const erpId = (_a = req.authUser) === null || _a === void 0 ? void 0 : _a.erpId;
+        console.log("[attendance/current] request received", {
+            erpId,
+            role: (_b = req.authUser) === null || _b === void 0 ? void 0 : _b.role,
+        });
         const todayIst = new Intl.DateTimeFormat("en-CA", {
             timeZone: "Asia/Kolkata",
         }).format(new Date());
@@ -94,17 +66,32 @@ app.get("/api/attendance", authMiddleware_1.authenticateRequest, (req, res) => _
         if (error) {
             return res.status(500).json({ error: error.message });
         }
-        const normalizedAttendance = (data !== null && data !== void 0 ? data : []).map((item) => (Object.assign(Object.assign({}, item), { effective_logout_time: item.final_logout_time !== null && item.final_logout_time !== void 0 ? item.final_logout_time : item.logout_time !== null && item.logout_time !== void 0 ? item.logout_time : null })));
+        const normalizedAttendance = (data !== null && data !== void 0 ? data : []).map((item) => {
+            var _a, _b;
+            return (Object.assign(Object.assign({}, item), { effective_logout_time: (_b = (_a = item.final_logout_time) !== null && _a !== void 0 ? _a : item.logout_time) !== null && _b !== void 0 ? _b : null }));
+        });
+        console.log("[attendance/current] success", {
+            erpId,
+            count: normalizedAttendance.length,
+        });
         res.json({ attendance: normalizedAttendance });
     }
     catch (err) {
+        console.error("[attendance/current] failed", {
+            erpId: (_c = req.authUser) === null || _c === void 0 ? void 0 : _c.erpId,
+            error: err instanceof Error ? err.message : "Unknown error",
+        });
         res.status(500).json({ error: "Server error" });
     }
 }));
-app.get("/api/attendance/history", authMiddleware_1.authenticateRequest, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+app.get("/api/attendance/history", authMiddleware_1.authenticateRequest, (0, authMiddleware_1.authorizeRoles)("faculty"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
     try {
         const erpId = (_a = req.authUser) === null || _a === void 0 ? void 0 : _a.erpId;
+        console.log("[attendance/history] request received", {
+            erpId,
+            role: (_b = req.authUser) === null || _b === void 0 ? void 0 : _b.role,
+        });
         const { data, error } = yield supabase_1.supabase
             .from("attendance_logs")
             .select("*")
@@ -115,18 +102,33 @@ app.get("/api/attendance/history", authMiddleware_1.authenticateRequest, (req, r
         if (error) {
             return res.status(500).json({ error: error.message });
         }
-        const normalizedAttendance = (data !== null && data !== void 0 ? data : []).map((item) => (Object.assign(Object.assign({}, item), { effective_logout_time: item.final_logout_time !== null && item.final_logout_time !== void 0 ? item.final_logout_time : item.logout_time !== null && item.logout_time !== void 0 ? item.logout_time : null })));
+        const normalizedAttendance = (data !== null && data !== void 0 ? data : []).map((item) => {
+            var _a, _b;
+            return (Object.assign(Object.assign({}, item), { effective_logout_time: (_b = (_a = item.final_logout_time) !== null && _a !== void 0 ? _a : item.logout_time) !== null && _b !== void 0 ? _b : null }));
+        });
+        console.log("[attendance/history] success", {
+            erpId,
+            count: normalizedAttendance.length,
+        });
         res.json({ attendance: normalizedAttendance });
     }
     catch (_err) {
+        console.error("[attendance/history] failed", {
+            erpId: (_c = req.authUser) === null || _c === void 0 ? void 0 : _c.erpId,
+        });
         res.status(500).json({ error: "Server error" });
     }
 }));
-app.post("/api/attendance", authMiddleware_1.authenticateRequest, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+app.post("/api/attendance", authMiddleware_1.authenticateRequest, (0, authMiddleware_1.authorizeRoles)("faculty"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d;
     try {
         const erpId = (_a = req.authUser) === null || _a === void 0 ? void 0 : _a.erpId;
         const attendanceData = req.body; // Assume { date, shift, etc. }
+        console.log("[attendance/create] request received", {
+            erpId,
+            role: (_b = req.authUser) === null || _b === void 0 ? void 0 : _b.role,
+            date: attendanceData === null || attendanceData === void 0 ? void 0 : attendanceData.date,
+        });
         // Insert into attendance_logs
         const { data, error } = yield supabase_1.supabase
             .from("attendance_logs")
@@ -137,10 +139,17 @@ app.post("/api/attendance", authMiddleware_1.authenticateRequest, (req, res) => 
         }
         // Trigger notification
         yield (0, firebaseAdmin_1.sendNotification)(erpId, "login");
+        console.log("[attendance/create] success", {
+            erpId,
+            inserted: (_c = data === null || data === void 0 ? void 0 : data.length) !== null && _c !== void 0 ? _c : 0,
+        });
         res.json({ success: true, data });
     }
     catch (err) {
-        console.error("ERROR:", err);
+        console.error("[attendance/create] failed", {
+            erpId: (_d = req.authUser) === null || _d === void 0 ? void 0 : _d.erpId,
+            error: err instanceof Error ? err.message : "Unknown error",
+        });
         res.status(500).json({ error: "Server error" });
     }
 }));
