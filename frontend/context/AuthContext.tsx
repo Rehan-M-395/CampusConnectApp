@@ -22,7 +22,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [isLoading, setIsLoading] = useState(true);
 
   const apiBaseUrl =
-    process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5000';
+    process.env.EXPO_PUBLIC_API_URL ?? 'https://campusconnectapp-lu1d.onrender.com';
 
   useEffect(() => {
     const bootstrap = async () => {
