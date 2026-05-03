@@ -6,9 +6,9 @@ export default function SecurityHomepage() {
   const [activeTab, setActiveTab] = useState('PENDING');
 
   const visitors = [
-    { id: '1', name: 'John Doe', time: '2:30 PM', purpose: 'MEETING' },
-    { id: '2', name: 'Sarah Williams', time: '2:45 PM', purpose: 'DELIVERY' },
-    { id: '3', name: 'Michael Chen', time: '3:15 PM', purpose: 'MAINTENANCE' },
+    { id: '1', name: 'John Doe', time: '2:30 PM', purpose: 'Meeting' },
+    { id: '2', name: 'Sarah Williams', time: '2:45 PM', purpose: 'Meeting' },
+    { id: '3', name: 'Michael Jackson', time: '3:15 PM', purpose: 'Meeting' },
   ];
 
   return (
