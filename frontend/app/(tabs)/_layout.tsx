@@ -78,6 +78,20 @@ export default function TabLayout() {
           ),
         }}
       />
+
+        <Tabs.Screen
+        name="Gate Pass Request"
+        options={{
+          title: 'Gate Pass Request',
+          tabBarLabel: ({ color }) => (
+            <Text allowFontScaling={false} numberOfLines={1} style={[styles.tabBarLabel, { color }]}>Gate Pass Request</Text>
+          ),
+
+           tabBarIcon: ({ color }) => (
+             <MaterialIcons name="history" color={color} size={22} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
