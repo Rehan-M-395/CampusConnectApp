@@ -72,6 +72,20 @@ export default function FacultyTabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="gate-pass-request"
+        options={{
+          title: 'Gate Pass Request',
+          tabBarLabel: ({ color }) => (
+            <Text allowFontScaling={false} numberOfLines={1} style={[styles.tabBarLabel, { color }]}>
+              Gate Pass
+            </Text>
+          ),
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="qr-code-2" color={color} size={22} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
