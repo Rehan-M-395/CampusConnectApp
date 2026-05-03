@@ -13,11 +13,12 @@ exports.authenticateGuard = void 0;
 const shared_1 = require("./shared");
 const authenticateGuard = (erpId, password) => __awaiter(void 0, void 0, void 0, function* () {
     return (0, shared_1.authenticateFromTable)({
-        tableName: "guards",
+        tableName: "users",
         role: "guard",
-        idColumns: ["erpid", "erp_id", "guard_id"],
+        idColumns: ["erpid"],
         nameColumns: ["name", "full_name"],
         passwordColumns: ["password_hash", "password"],
+        allowedRoleValues: ["guard", "Guard"],
     }, erpId, password);
 });
 exports.authenticateGuard = authenticateGuard;

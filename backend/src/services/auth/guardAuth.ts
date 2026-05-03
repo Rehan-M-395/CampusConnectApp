@@ -7,11 +7,12 @@ export const authenticateGuard = async (
 ): Promise<AuthUser> =>
   authenticateFromTable(
     {
-      tableName: "guards",
+      tableName: "users",
       role: "guard",
-      idColumns: ["erpid", "erp_id", "guard_id"],
+      idColumns: ["erpid"],
       nameColumns: ["name", "full_name"],
       passwordColumns: ["password_hash", "password"],
+      allowedRoleValues: ["guard", "Guard"],
     },
     erpId,
     password,

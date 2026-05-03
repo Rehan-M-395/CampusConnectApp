@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import logo from '../../assets/images/logo1.png';
@@ -11,29 +21,26 @@ type LoginComponentProps = {
   onLoginSuccess: (session: AuthSession) => Promise<void> | void;
 };
 
-type RoleValue = 'faculty' | 'security_guard';
-
 type RoleOption = {
   label: string;
-  value: RoleValue;
+  value: UserRole;
 };
 
 const LAST_LOGIN_CREDENTIALS_KEY = 'last_login_credentials';
 
+const ROLE_OPTIONS: RoleOption[] = [
+  { label: 'Faculty', value: 'faculty' },
+  { label: 'Security Guard', value: 'guard' },
+];
+
 export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComponentProps) {
   const [erpId, setErpId] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('faculty');
+  const [role, setRole] = useState<UserRole | null>('faculty');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const [open, setOpen] = useState(false);
-  const [role, setRole] = useState<RoleValue | null>(null);
-  const [items, setItems] = useState<RoleOption[]>([
-    { label: "Faculty", value: "faculty" },
-    { label: "Security Guard", value: "security_guard" },
-  ]);
+  const [isRolePickerOpen, setIsRolePickerOpen] = useState(false);
 
   useEffect(() => {
     const loadSavedCredentials = async () => {
@@ -76,19 +83,21 @@ export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComp
       const token = await AsyncStorage.getItem('token');
       const user = await AsyncStorage.getItem('user');
 
-      if (token && user) {
-        try {
-          await fetch(`${apiBaseUrl}/api/auth/store-fcm-token`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ fcmToken: newToken }),
-          });
-        } catch (error) {
-          console.error('Failed to update FCM token:', error);
-        }
+      if (!token || !user) {
+        return;
+      }
+
+      try {
+        await fetch(`${apiBaseUrl}/api/auth/store-fcm-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ fcmToken: newToken }),
+        });
+      } catch (error) {
+        console.error('Failed to update FCM token:', error);
       }
     });
 
@@ -132,7 +141,6 @@ export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComp
       ) {
         const loginError = 'error' in payload ? payload.error : undefined;
         setErrorMessage(loginError ?? 'Login failed. Please check your credentials.');
-        console.log("cannot login ");
         return;
       }
 
@@ -175,6 +183,10 @@ export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComp
     }
   };
 
+  const selectedRoleLabel =
+    ROLE_OPTIONS.find(option => option.value === role)?.label ?? 'Choose your role';
+  const idPlaceholder = role === 'guard' ? 'Guard ID' : 'ERP ID';
+
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
@@ -187,64 +199,20 @@ export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComp
           Sign in to check attendance, review your records, and keep notifications in sync.
         </Text>
 
-        <View style={styles.roleSelector}>
-          {(['faculty', 'guard'] as const).map(option => {
-            const isActive = role === option;
-
-            return (
-              <TouchableOpacity
-                key={option}
-                style={[styles.roleChip, isActive && styles.roleChipActive]}
-                onPress={() => setRole(option)}
-              >
-                <Text style={[styles.roleChipText, isActive && styles.roleChipTextActive]}>
-                  {option === 'faculty' ? 'Faculty' : 'Guard'}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
         <Text style={styles.roleLabel}>Select Role</Text>
-
-
-        <View style={styles.dropdownWrapper}>
-          <DropDownPicker
-            open={open}
-            value={role}
-            items={items}
-            setOpen={setOpen}
-            setValue={setRole}
-            setItems={setItems}
-            placeholder="Choose your role"
-            listMode="SCROLLVIEW"
-            maxHeight={180}
-            dropDownDirection="BOTTOM"
-            closeAfterSelecting
-            closeOnBackPressed
-            zIndex={3000}
-            zIndexInverse={1000}
-            style={styles.dropdown}
-            textStyle={styles.dropdownText}
-            placeholderStyle={styles.dropdownPlaceholder}
-            dropDownContainerStyle={styles.dropdownContainer}
-            listItemLabelStyle={styles.dropdownItemLabel}
-            selectedItemContainerStyle={styles.dropdownSelectedItemContainer}
-            selectedItemLabelStyle={styles.dropdownSelectedItemLabel}
-            ArrowDownIconComponent={() => (
-              <Ionicons name="chevron-down" size={18} color="#7f1d1d" />
-            )}
-            ArrowUpIconComponent={() => (
-              <Ionicons name="chevron-up" size={18} color="#7f1d1d" />
-            )}
-            TickIconComponent={() => (
-              <Ionicons name="checkmark" size={16} color="#7f1d1d" />
-            )}
-          />
-        </View>
+        <TouchableOpacity
+          style={styles.dropdownButton}
+          activeOpacity={0.85}
+          onPress={() => setIsRolePickerOpen(true)}
+        >
+          <Text style={[styles.dropdownButtonText, !role && styles.dropdownPlaceholder]}>
+            {selectedRoleLabel}
+          </Text>
+          <Ionicons name="chevron-down" size={18} color="#7f1d1d" />
+        </TouchableOpacity>
 
         <TextInput
-          placeholder={role === 'guard' ? 'Guard ID' : 'ERP ID'}
+          placeholder={idPlaceholder}
           placeholderTextColor="#94a3b8"
           value={erpId}
           onChangeText={setErpId}
@@ -289,7 +257,7 @@ export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComp
           disabled={isLoading}
         >
           <Text style={styles.buttonText}>
-            {isLoading ? 'Signing in...' : `Login as ${role === 'faculty' ? 'Faculty' : 'Guard'}`}
+            {isLoading ? 'Signing in...' : `Login as ${selectedRoleLabel}`}
           </Text>
         </TouchableOpacity>
 
@@ -298,6 +266,47 @@ export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComp
           after sign-in.
         </Text>
       </View>
+
+      <Modal
+        visible={isRolePickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsRolePickerOpen(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setIsRolePickerOpen(false)}>
+          <Pressable style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Choose your role</Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {ROLE_OPTIONS.map(option => {
+                const isSelected = option.value === role;
+
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[styles.roleOption, isSelected && styles.roleOptionSelected]}
+                    onPress={() => {
+                      setRole(option.value);
+                      setIsRolePickerOpen(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.roleOptionText,
+                        isSelected && styles.roleOptionTextSelected,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                    {isSelected ? (
+                      <Ionicons name="checkmark" size={18} color="#7f1d1d" />
+                    ) : null}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -345,31 +354,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  roleSelector: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
+  roleLabel: {
+    color: '#f8fafc',
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 8,
   },
-  roleChip: {
-    flex: 1,
+  dropdownButton: {
+    minHeight: 52,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#f3d08a',
-    backgroundColor: '#5c1212',
-    paddingVertical: 12,
+    borderColor: '#e09c15',
+    backgroundColor: '#e1d2d2',
+    paddingHorizontal: 16,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
-  roleChipActive: {
-    backgroundColor: '#d1a550',
-    borderColor: '#d1a550',
+  dropdownButtonText: {
+    color: '#0f172a',
+    fontSize: 15,
+    fontWeight: '600',
   },
-  roleChipText: {
-    color: '#f8fafc',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  roleChipTextActive: {
-    color: '#3b1f05',
+  dropdownPlaceholder: {
+    color: '#64748b',
   },
   input: {
     width: '100%',
@@ -389,7 +398,6 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 14,
     alignItems: 'center',
- //   marginTop: 10,
     shadowColor: '#2563eb',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.25,
@@ -444,5 +452,50 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     fontSize: 12,
     lineHeight: 18,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.42)',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    backgroundColor: '#fffaf3',
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#e7d2ab',
+    maxHeight: 320,
+  },
+  modalTitle: {
+    color: '#7f1d1d',
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 12,
+  },
+  roleOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    marginBottom: 8,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#f0e2c3',
+  },
+  roleOptionSelected: {
+    backgroundColor: '#f6e8c8',
+    borderColor: '#d1a550',
+  },
+  roleOptionText: {
+    color: '#0f172a',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  roleOptionTextSelected: {
+    color: '#7f1d1d',
+    fontWeight: '700',
   },
 });

@@ -46,13 +46,29 @@ const comparePassword = (password, storedValue) => __awaiter(void 0, void 0, voi
 });
 const authenticateFromTable = (config, erpId, password) => __awaiter(void 0, void 0, void 0, function* () {
     const normalizedErpId = normalizeIdentifier(erpId);
-    const { data, error } = yield supabase_1.supabase.from(config.tableName).select("*").limit(200);
-    if (error) {
-        throw new Error(error.message);
-    }
+    const queryResults = yield Promise.all(config.idColumns.map((columnName) => __awaiter(void 0, void 0, void 0, function* () {
+        const { data, error } = yield supabase_1.supabase
+            .from(config.tableName)
+            .select("*")
+            .ilike(columnName, normalizedErpId)
+            .limit(50);
+        if (error) {
+            throw error;
+        }
+        return data !== null && data !== void 0 ? data : [];
+    })));
+    const data = queryResults.flat();
     const matchingRow = (data !== null && data !== void 0 ? data : []).find((row) => {
+        var _a;
         const rowErpId = resolveFirstString(row, config.idColumns);
-        return normalizeIdentifier(rowErpId) === normalizedErpId;
+        if (normalizeIdentifier(rowErpId) !== normalizedErpId) {
+            return false;
+        }
+        if (!((_a = config.allowedRoleValues) === null || _a === void 0 ? void 0 : _a.length)) {
+            return true;
+        }
+        const rowRole = resolveFirstString(row, ["role"]);
+        return config.allowedRoleValues.some(allowedRole => normalizeIdentifier(allowedRole) === normalizeIdentifier(rowRole));
     });
     if (!matchingRow) {
         throw new Error(`${config.role} account not found.`);

@@ -9,7 +9,7 @@ export const authenticateFaculty = async (
     {
       tableName: "users",
       role: "faculty",
-      idColumns: ["erpid", "erp_id"],
+      idColumns: ["erpid"],
       nameColumns: ["name", "full_name"],
       passwordColumns: ["password_hash", "password"],
     },

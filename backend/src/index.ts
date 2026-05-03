@@ -49,6 +49,10 @@ app.get(
   async (req: any, res) => {
   try {
     const erpId = req.authUser?.erpId;
+    console.log("[attendance/current] request received", {
+      erpId,
+      role: req.authUser?.role,
+    });
     const todayIst = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Kolkata",
     }).format(new Date());
@@ -70,8 +74,16 @@ app.get(
       effective_logout_time: item.final_logout_time ?? item.logout_time ?? null,
     }));
 
+    console.log("[attendance/current] success", {
+      erpId,
+      count: normalizedAttendance.length,
+    });
     res.json({ attendance: normalizedAttendance });
   } catch (err) {
+    console.error("[attendance/current] failed", {
+      erpId: req.authUser?.erpId,
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -83,6 +95,10 @@ app.get(
   async (req: any, res) => {
   try {
     const erpId = req.authUser?.erpId;
+    console.log("[attendance/history] request received", {
+      erpId,
+      role: req.authUser?.role,
+    });
 
     const { data, error } = await supabase
       .from("attendance_logs")
@@ -101,8 +117,15 @@ app.get(
       effective_logout_time: item.final_logout_time ?? item.logout_time ?? null,
     }));
 
+    console.log("[attendance/history] success", {
+      erpId,
+      count: normalizedAttendance.length,
+    });
     res.json({ attendance: normalizedAttendance });
   } catch (_err) {
+    console.error("[attendance/history] failed", {
+      erpId: req.authUser?.erpId,
+    });
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -115,6 +138,11 @@ app.post(
   try {
     const erpId = req.authUser?.erpId;
     const attendanceData = req.body; // Assume { date, shift, etc. }
+    console.log("[attendance/create] request received", {
+      erpId,
+      role: req.authUser?.role,
+      date: attendanceData?.date,
+    });
 
     // Insert into attendance_logs
     const { data, error } = await supabase
@@ -129,9 +157,16 @@ app.post(
     // Trigger notification
     await sendNotification(erpId, "login");
 
+    console.log("[attendance/create] success", {
+      erpId,
+      inserted: data?.length ?? 0,
+    });
     res.json({ success: true, data });
   } catch (err) {
-    console.error("ERROR:", err);
+    console.error("[attendance/create] failed", {
+      erpId: req.authUser?.erpId,
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
     res.status(500).json({ error: "Server error" });
   }
 });

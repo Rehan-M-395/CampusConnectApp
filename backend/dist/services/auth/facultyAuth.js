@@ -15,7 +15,7 @@ const authenticateFaculty = (erpId, password) => __awaiter(void 0, void 0, void 
     return (0, shared_1.authenticateFromTable)({
         tableName: "users",
         role: "faculty",
-        idColumns: ["erpid", "erp_id"],
+        idColumns: ["erpid"],
         nameColumns: ["name", "full_name"],
         passwordColumns: ["password_hash", "password"],
     }, erpId, password);

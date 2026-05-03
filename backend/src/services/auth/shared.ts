@@ -8,6 +8,7 @@ type AuthTableConfig = {
   idColumns: string[];
   nameColumns: string[];
   passwordColumns: string[];
+  allowedRoleValues?: string[];
 };
 
 type UserRow = Record<string, unknown> & {
@@ -61,15 +62,38 @@ export const authenticateFromTable = async (
 ): Promise<AuthUser> => {
   const normalizedErpId = normalizeIdentifier(erpId);
 
-  const { data, error } = await supabase.from(config.tableName).select("*").limit(200);
+  const queryResults = await Promise.all(
+    config.idColumns.map(async columnName => {
+      const { data, error } = await supabase
+        .from(config.tableName)
+        .select("*")
+        .ilike(columnName, normalizedErpId)
+        .limit(50);
 
-  if (error) {
-    throw new Error(error.message);
-  }
+      if (error) {
+        throw error;
+      }
+
+      return data ?? [];
+    }),
+  );
+
+  const data = queryResults.flat();
 
   const matchingRow = (data ?? []).find((row) => {
     const rowErpId = resolveFirstString(row as UserRow, config.idColumns);
-    return normalizeIdentifier(rowErpId) === normalizedErpId;
+    if (normalizeIdentifier(rowErpId) !== normalizedErpId) {
+      return false;
+    }
+
+    if (!config.allowedRoleValues?.length) {
+      return true;
+    }
+
+    const rowRole = resolveFirstString(row as UserRow, ["role"]);
+    return config.allowedRoleValues.some(
+      allowedRole => normalizeIdentifier(allowedRole) === normalizeIdentifier(rowRole),
+    );
   }) as UserRow | undefined;
 
   if (!matchingRow) {
