@@ -61,11 +61,41 @@ export const listGatePasses = async (req: Request, res: Response): Promise<void>
   }
 };
 
+export const listGuardHistory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const guardErpId = req.authUser?.erpId;
+    console.log("[gate-pass/history] request received", {
+      erpId: guardErpId,
+      role: req.authUser?.role,
+    });
+
+    if (!guardErpId) {
+      res.status(400).json({ error: "Authenticated guard context is missing." });
+      return;
+    }
+
+    const records = await GatePassService.listGuardHistory(guardErpId);
+    console.log("[gate-pass/history] success", {
+      erpId: guardErpId,
+      count: records.length,
+    });
+    res.json({ gatePasses: records });
+  } catch (error: any) {
+    console.error("[gate-pass/history] failed", {
+      erpId: req.authUser?.erpId,
+      error: error.message,
+    });
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const scanGatePass = async (req: Request, res: Response): Promise<void> => {
   try {
     const qrValue = req.body?.qrValue;
+    const guardErpId = req.authUser?.erpId;
+    const guardName = req.authUser?.name;
     console.log("[gate-pass/scan] request received", {
-      erpId: req.authUser?.erpId,
+      erpId: guardErpId,
       role: req.authUser?.role,
       qrValue,
     });
@@ -75,7 +105,12 @@ export const scanGatePass = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    const record = await GatePassService.scanGatePass(qrValue);
+    if (!guardErpId || !guardName) {
+      res.status(400).json({ error: "Authenticated guard context is missing." });
+      return;
+    }
+
+    const record = await GatePassService.scanGatePass(qrValue, guardErpId, guardName);
     console.log("[gate-pass/scan] success", {
       id: record.id,
       parent_name: record.parent_name,

@@ -75,12 +75,30 @@ class GatePassService {
     return data ?? [];
   }
 
-  static async scanGatePass(qrValue: string) {
+  static async listGuardHistory(guardErpId: string) {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select("*")
+      .eq("guard_erpid", guardErpId)
+      .order("generated_at", { ascending: false });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data ?? [];
+  }
+
+  static async scanGatePass(qrValue: string, guardErpId: string, guardName: string) {
     const gatePassId = parseGatePassId(qrValue);
 
     const { data, error } = await supabase
       .from(TABLE_NAME)
-      .update({ qr_scanned: 1 })
+      .update({
+        qr_scanned: 1,
+        guard_erpid: guardErpId,
+        guard_name: guardName,
+      })
       .eq("id", gatePassId)
       .eq("qr_scanned", 0)
       .select()

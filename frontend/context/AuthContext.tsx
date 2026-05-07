@@ -6,10 +6,12 @@ import { AuthSession } from '../types/auth';
 const TOKEN_KEY = 'token';
 const USER_KEY = 'user';
 const ROLE_KEY = 'role';
+const LAST_LOGIN_CREDENTIALS_KEY = 'last_login_credentials';
 
 type AuthContextValue = {
   session: AuthSession | null;
   isLoading: boolean;
+  isSigningOut: boolean;
   apiBaseUrl: string;
   signIn: (session: AuthSession) => Promise<void>;
   signOut: () => Promise<void>;
@@ -20,6 +22,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const apiBaseUrl = 'https://campusconnectapp-lu1d.onrender.com';
 
@@ -58,6 +61,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     () => ({
       session,
       isLoading,
+      isSigningOut,
       apiBaseUrl,
       signIn: async nextSession => {
         await Promise.all([
@@ -69,23 +73,29 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setSession(nextSession);
       },
       signOut: async () => {
+        setIsSigningOut(true);
         const authToken = session?.token;
 
-        if (authToken) {
-          await removeStoredFCMToken(apiBaseUrl, authToken);
+        try {
+          if (authToken) {
+            await removeStoredFCMToken(apiBaseUrl, authToken);
+          }
+
+          await clearFCMToken();
+          await Promise.all([
+            AsyncStorage.removeItem(TOKEN_KEY),
+            AsyncStorage.removeItem(USER_KEY),
+            AsyncStorage.removeItem(ROLE_KEY),
+            AsyncStorage.removeItem(LAST_LOGIN_CREDENTIALS_KEY),
+          ]);
+
+          setSession(null);
+        } finally {
+          setIsSigningOut(false);
         }
-
-        await clearFCMToken();
-        await Promise.all([
-          AsyncStorage.removeItem(TOKEN_KEY),
-          AsyncStorage.removeItem(USER_KEY),
-          AsyncStorage.removeItem(ROLE_KEY),
-        ]);
-
-        setSession(null);
       },
     }),
-    [apiBaseUrl, isLoading, session],
+    [apiBaseUrl, isLoading, isSigningOut, session],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

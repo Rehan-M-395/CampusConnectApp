@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Redirect } from 'expo-router';
 import {
   ActivityIndicator,
   Alert,
@@ -26,7 +27,7 @@ type GatePassRecord = {
 };
 
 export default function GuardScanScreen() {
-  const { apiBaseUrl, session, signOut } = useAuth();
+  const { apiBaseUrl, isSigningOut, session } = useAuth();
   const [activeTab, setActiveTab] = useState<'PENDING' | 'CHECKED_IN'>('PENDING');
   const [gatePasses, setGatePasses] = useState<GatePassRecord[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,6 +35,10 @@ export default function GuardScanScreen() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(false);
+
+  if (!session) {
+    return <Redirect href="/login" />;
+  }
 
   const fetchGatePasses = async (isRefresh = false) => {
     if (!session?.token) {
@@ -170,19 +175,6 @@ export default function GuardScanScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={() => fetchGatePasses(true)} />
       }
     >
-      <View style={styles.header}>
-        <View style={styles.headerAvatar}>
-          <Ionicons name="person" size={20} color="#94a3b8" />
-        </View>
-        <View style={styles.headerText}>
-          <Text style={styles.headerEyebrow}>Guard Portal</Text>
-          <Text style={styles.headerTitle}>{session?.user.name ?? 'Guard'}</Text>
-        </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
-          <Ionicons name="log-out-outline" size={22} color="#e09c15" />
-        </TouchableOpacity>
-      </View>
-
       <View style={styles.scannerSection}>
         <TouchableOpacity style={styles.scannerPlaceholder} activeOpacity={0.9} onPress={handleOpenScanner}>
           <Ionicons name="scan-outline" size={120} color="#e09c15" />
@@ -288,6 +280,15 @@ export default function GuardScanScreen() {
           )}
         </View>
       </Modal>
+
+      {isSigningOut ? (
+        <View style={styles.logoutOverlay}>
+          <View style={styles.logoutBox}>
+            <ActivityIndicator size="large" color="#7f1d1d" />
+            <Text style={styles.logoutLoadingText}>Logging out...</Text>
+          </View>
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
@@ -299,40 +300,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingBottom: 40,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#450a0a',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  headerAvatar: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#1e293b',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  headerText: {
-    flex: 1,
-  },
-  headerEyebrow: {
-    color: '#fca5a5',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  headerTitle: {
-    color: '#e09c15',
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  logoutButton: {
-    padding: 6,
   },
   scannerSection: {
     alignItems: 'center',
@@ -533,5 +500,26 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     textAlign: 'center',
+  },
+  logoutOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoutBox: {
+    backgroundColor: '#ffffff',
+    padding: 20,
+    borderRadius: 14,
+    alignItems: 'center',
+    gap: 10,
+  },
+  logoutLoadingText: {
+    color: '#7f1d1d',
+    fontWeight: '600',
   },
 });

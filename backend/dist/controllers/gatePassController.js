@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.markGatePassOut = exports.markGatePassIn = exports.scanGatePass = exports.listGatePasses = exports.createGatePass = void 0;
+exports.markGatePassOut = exports.markGatePassIn = exports.scanGatePass = exports.listGuardHistory = exports.listGatePasses = exports.createGatePass = void 0;
 const gatePassService_1 = __importDefault(require("../services/gatePassService"));
 const createGatePass = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e, _f, _g;
@@ -76,13 +76,43 @@ const listGatePasses = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.listGatePasses = listGatePasses;
+const listGuardHistory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
+    try {
+        const guardErpId = (_a = req.authUser) === null || _a === void 0 ? void 0 : _a.erpId;
+        console.log("[gate-pass/history] request received", {
+            erpId: guardErpId,
+            role: (_b = req.authUser) === null || _b === void 0 ? void 0 : _b.role,
+        });
+        if (!guardErpId) {
+            res.status(400).json({ error: "Authenticated guard context is missing." });
+            return;
+        }
+        const records = yield gatePassService_1.default.listGuardHistory(guardErpId);
+        console.log("[gate-pass/history] success", {
+            erpId: guardErpId,
+            count: records.length,
+        });
+        res.json({ gatePasses: records });
+    }
+    catch (error) {
+        console.error("[gate-pass/history] failed", {
+            erpId: (_c = req.authUser) === null || _c === void 0 ? void 0 : _c.erpId,
+            error: error.message,
+        });
+        res.status(500).json({ error: error.message });
+    }
+});
+exports.listGuardHistory = listGuardHistory;
 const scanGatePass = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     try {
         const qrValue = (_a = req.body) === null || _a === void 0 ? void 0 : _a.qrValue;
+        const guardErpId = (_b = req.authUser) === null || _b === void 0 ? void 0 : _b.erpId;
+        const guardName = (_c = req.authUser) === null || _c === void 0 ? void 0 : _c.name;
         console.log("[gate-pass/scan] request received", {
-            erpId: (_b = req.authUser) === null || _b === void 0 ? void 0 : _b.erpId,
-            role: (_c = req.authUser) === null || _c === void 0 ? void 0 : _c.role,
+            erpId: guardErpId,
+            role: (_d = req.authUser) === null || _d === void 0 ? void 0 : _d.role,
             qrValue,
         });
         if (!qrValue || typeof qrValue !== "string") {
@@ -90,7 +120,11 @@ const scanGatePass = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             res.status(400).json({ error: "qrValue is required." });
             return;
         }
-        const record = yield gatePassService_1.default.scanGatePass(qrValue);
+        if (!guardErpId || !guardName) {
+            res.status(400).json({ error: "Authenticated guard context is missing." });
+            return;
+        }
+        const record = yield gatePassService_1.default.scanGatePass(qrValue, guardErpId, guardName);
         console.log("[gate-pass/scan] success", {
             id: record.id,
             parent_name: record.parent_name,
@@ -99,7 +133,7 @@ const scanGatePass = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
     catch (error) {
         console.error("[gate-pass/scan] failed", {
-            erpId: (_d = req.authUser) === null || _d === void 0 ? void 0 : _d.erpId,
+            erpId: (_e = req.authUser) === null || _e === void 0 ? void 0 : _e.erpId,
             error: error.message,
         });
         res.status(400).json({ error: error.message });

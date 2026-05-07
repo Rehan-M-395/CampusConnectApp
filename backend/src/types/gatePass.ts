@@ -12,6 +12,8 @@ export type GatePassRecord = {
   id: string;
   teacher_erpid: string;
   teacher_name: string;
+  guard_erpid: string | null;
+  guard_name: string | null;
   parent_name: string;
   num_persons: number;
   visit_date: string;

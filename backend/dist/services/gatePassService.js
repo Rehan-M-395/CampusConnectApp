@@ -74,12 +74,29 @@ class GatePassService {
             return data !== null && data !== void 0 ? data : [];
         });
     }
-    static scanGatePass(qrValue) {
+    static listGuardHistory(guardErpId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { data, error } = yield supabase_1.supabase
+                .from(TABLE_NAME)
+                .select("*")
+                .eq("guard_erpid", guardErpId)
+                .order("generated_at", { ascending: false });
+            if (error) {
+                throw new Error(error.message);
+            }
+            return data !== null && data !== void 0 ? data : [];
+        });
+    }
+    static scanGatePass(qrValue, guardErpId, guardName) {
         return __awaiter(this, void 0, void 0, function* () {
             const gatePassId = parseGatePassId(qrValue);
             const { data, error } = yield supabase_1.supabase
                 .from(TABLE_NAME)
-                .update({ qr_scanned: 1 })
+                .update({
+                qr_scanned: 1,
+                guard_erpid: guardErpId,
+                guard_name: guardName,
+            })
                 .eq("id", gatePassId)
                 .eq("qr_scanned", 0)
                 .select()
