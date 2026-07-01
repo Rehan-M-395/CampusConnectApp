@@ -17,11 +17,13 @@ exports.authenticateByRole = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const facultyAuth_1 = require("./facultyAuth");
 const guardAuth_1 = require("./guardAuth");
+const studentAuth_1 = require("./studentAuth");
 const JWT_SECRET = (_a = process.env.JWT_SECRET) !== null && _a !== void 0 ? _a : "dev-secret-change-me";
 const JWT_EXPIRATION = "7d";
 const ROLE_HANDLERS = {
     faculty: facultyAuth_1.authenticateFaculty,
     guard: guardAuth_1.authenticateGuard,
+    student: studentAuth_1.authenticateStudent,
 };
 const normalizeErpId = (erpId) => erpId.trim().toUpperCase();
 const authenticateByRole = (payload) => __awaiter(void 0, void 0, void 0, function* () {

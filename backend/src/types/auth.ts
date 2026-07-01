@@ -1,4 +1,4 @@
-export type UserRole = "faculty" | "guard";
+export type UserRole = "faculty" | "guard" | "student";
 
 export type LoginRequest = {
   erpId: string;

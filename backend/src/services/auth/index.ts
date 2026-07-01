@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { AuthUser, JwtPayload, LoginRequest, LoginResponse, UserRole } from "../../types/auth";
 import { authenticateFaculty } from "./facultyAuth";
 import { authenticateGuard } from "./guardAuth";
+import { authenticateStudent } from "./studentAuth";
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "dev-secret-change-me";
 const JWT_EXPIRATION = "7d";
@@ -9,6 +10,7 @@ const JWT_EXPIRATION = "7d";
 const ROLE_HANDLERS: Record<UserRole, (erpId: string, password: string) => Promise<AuthUser>> = {
   faculty: authenticateFaculty,
   guard: authenticateGuard,
+  student: authenticateStudent,
 };
 
 const normalizeErpId = (erpId: string): string => erpId.trim().toUpperCase();

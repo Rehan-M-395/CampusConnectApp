@@ -11,4 +11,11 @@
 -keep class com.swmansion.reanimated.** { *; }
 -keep class com.facebook.react.turbomodule.** { *; }
 
+# Expo modules / expo-camera runtime classes required in release builds when R8 is enabled.
+-keep class expo.modules.** { *; }
+-keep interface expo.modules.** { *; }
+-keepclassmembers class * {
+    @expo.modules.kotlin.records.Field <fields>;
+}
+
 # Add any project specific keep options here:
