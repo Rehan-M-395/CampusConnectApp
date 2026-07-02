@@ -180,7 +180,7 @@ export default function HomeComponent({
 
   // 🔥 Main UI (your original design)
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={['left', 'right', 'bottom']}>
       <ScrollView
         contentContainerStyle={styles.screenContent}
         refreshControl={
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    paddingTop: 24,
+    paddingTop: 10,
     paddingHorizontal: 16,
   },
   screenContent: {

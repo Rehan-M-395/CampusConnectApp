@@ -318,7 +318,7 @@ export default function PreviousAttendance() {
   };
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={['left', 'right', 'bottom']}>
       <View style={styles.tableWrapper}>
 
         {/* FILTER MODE BUTTONS */}
