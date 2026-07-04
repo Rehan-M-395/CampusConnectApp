@@ -11,11 +11,15 @@ export default function LoginScreen() {
   }
 
   if (session) {
-    return session.role === 'guard' ? (
-      <Redirect href={'/(guard)/scan' as never} />
-    ) : (
-      <Redirect href={'/(faculty)/(tabs)/home' as never} />
-    );
+    if (session.role === 'guard') {
+      return <Redirect href={'/(guard)/scan' as never} />;
+    }
+
+    if (session.role === 'student') {
+      return <Redirect href={'/(student)/home' as never} />;
+    }
+
+    return <Redirect href={'/(faculty)/(tabs)/home' as never} />;
   }
 
   const handleLoginSuccess = async (nextSession: AuthSession) => {
