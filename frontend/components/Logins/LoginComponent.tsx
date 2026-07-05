@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import logo from '../../assets/images/logo1.png';
 import { getFCMToken, setupTokenRefresh } from '../../services/notificationService';
 import { AuthSession, LoginResponse, UserRole } from '../../types/auth';
+import { loginStudent } from '../../services/studentAuthMock';
 
 type LoginComponentProps = {
   apiBaseUrl: string;
@@ -119,6 +120,28 @@ export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComp
 
       if (!role) {
         setErrorMessage('Please select your role before logging in.');
+        return;
+      }
+
+      if (role === 'student') {
+        const session = await loginStudent(trimmedErpId, password);
+
+        if (!session) {
+          setErrorMessage('Invalid student credentials.');
+          return;
+        }
+
+        await AsyncStorage.setItem(
+          LAST_LOGIN_CREDENTIALS_KEY,
+          JSON.stringify({
+            erpId: trimmedErpId,
+            password,
+            role,
+          }),
+        );
+
+        await onLoginSuccess(session);
+
         return;
       }
 

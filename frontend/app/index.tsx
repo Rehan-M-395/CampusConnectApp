@@ -17,7 +17,7 @@ export default function IndexScreen() {
   }
 
   if (session.role === 'student') {
-    return <Redirect href={'/(student)/home' as never} />;
+    return <Redirect href={'/(student)/(drawer)/home' as never} />;
   }
 
   return <Redirect href={'/(faculty)/(tabs)/home' as never} />;

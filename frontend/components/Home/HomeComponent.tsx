@@ -30,7 +30,6 @@ type Props = {
   user?: AuthUser;
   token: string;
   apiBaseUrl: string;
-  onLogout?: () => void;
 };
 
 const formatTime = (value: string | null) => {
@@ -65,22 +64,13 @@ export default function HomeComponent({
   user,
   token,
   apiBaseUrl,
-  onLogout,
 }: Props) {
   const [attendance, setAttendance] = useState<Row | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasAttendanceData, setHasAttendanceData] = useState(true);
-  const [loggingOut, setLoggingOut] = useState(false);
 
-  const handleLogout = () => {
-    setLoggingOut(true);
-
-    setTimeout(() => {
-      onLogout?.();
-    }, 800);
-  };
 
   const fetchAttendance = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
@@ -168,19 +158,13 @@ export default function HomeComponent({
         >
           <Text style={styles.retryText}>Retry</Text>
         </TouchableOpacity>
-
-        {onLogout && (
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} disabled={loggingOut}>
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
-        )}
       </View>
     );
   }
 
   // 🔥 Main UI (your original design)
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={['left', 'right', 'bottom']}>
       <ScrollView
         contentContainerStyle={styles.screenContent}
         refreshControl={
@@ -198,11 +182,6 @@ export default function HomeComponent({
         <View style={styles.user}>
         <Text style={styles.title}>{attendance?.name ?? user?.name ?? 'Faculty'}</Text>         
              
-        {onLogout && (
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} disabled={loggingOut}>
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
-        )}
 
         </View>
 
@@ -275,14 +254,6 @@ export default function HomeComponent({
 
       </View>
       </ScrollView>
-      {loggingOut && (
-      <View style={styles.logoutOverlay}>
-        <View style={styles.logoutBox}>
-          <ActivityIndicator size="large" color="#7f1d1d" />
-          <Text style={styles.logoutLoadingText}>Logging out...</Text>
-        </View>
-      </View>
-    )}
     </SafeAreaView>
   );
 }
@@ -291,7 +262,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    paddingTop: 24,
+    paddingTop: 10,
     paddingHorizontal: 16,
   },
   screenContent: {
@@ -356,19 +327,6 @@ const styles = StyleSheet.create({
   subtitle: {
     color: '#F5E6D3',
     marginTop:8,
-  },
-  logoutButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#5c1212',
-    
-    borderRadius: 10,
-    alignSelf: 'auto',
-  },
-  logoutText: {
-    color: '#FFF8F0',
-    // color:'#db0b0b',
-    fontWeight: '700',
   },
   statsRow: {
     flexDirection: 'row',
@@ -463,27 +421,4 @@ const styles = StyleSheet.create({
   flexWrap: 'wrap',
   textAlign: 'right',
   },
-  logoutOverlay: {
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: 'rgba(0,0,0,0.4)',
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-
-logoutBox: {
-  backgroundColor: '#FFFFFF',
-  padding: 20,
-  borderRadius: 14,
-  alignItems: 'center',
-  gap: 10,
-},
-
-logoutLoadingText: {
-  color: '#7f1d1d',
-  fontWeight: '600',
-},
 });

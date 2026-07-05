@@ -1,10 +1,9 @@
 import { Drawer } from 'expo-router/drawer';
-import React from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DrawerContent from '../../../components/Navigation/DrawerContent';
 
-export default function FacultyDrawerLayout() {
+export default function StudentDrawerLayout() {
   return (
     <Drawer
       drawerContent={(props) => (
@@ -47,28 +46,13 @@ export default function FacultyDrawerLayout() {
       />
 
       <Drawer.Screen
-        name="attendance"
+        name="profile"
         options={{
-          title: 'Attendance',
-          drawerLabel: 'Attendance',
+          title: 'Profile',
+          drawerLabel: 'Profile',
           drawerIcon: ({ color, size }) => (
-            <MaterialIcons
-              name="history"
-              color={color}
-              size={size}
-            />
-          ),
-        }}
-      />
-
-      <Drawer.Screen
-        name="gate-pass-request"
-        options={{
-          title: 'Gate Pass',
-          drawerLabel: 'Gate Pass',
-          drawerIcon: ({ color, size }) => (
-            <MaterialIcons
-              name="qr-code-2"
+            <Ionicons
+              name="person-outline"
               color={color}
               size={size}
             />
