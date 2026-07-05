@@ -75,7 +75,32 @@ export default function FacultyDrawerLayout() {
           ),
         }}
       />
+<<<<<<< Updated upstream
     </Drawer>
+=======
+
+
+      <Tabs.Screen 
+       name="student-attendance"
+        options={{
+          title: 'Student Attendance',
+          tabBarLabel: ({ color }) => (
+            <Text allowFontScaling={false} numberOfLines={1} style={[styles.tabBarLabel, { color }]}>
+              Student Attendance
+            </Text>
+          ),
+           tabBarIcon: ({ color }) => (
+            <MaterialIcons name="qr-code-2" color={color} size={22} />
+           ),
+        }}
+      />
+
+
+        
+    
+
+    </Tabs>
+>>>>>>> Stashed changes
   );
 }
 
