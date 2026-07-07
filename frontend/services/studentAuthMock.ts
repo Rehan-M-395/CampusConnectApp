@@ -1,3 +1,4 @@
+import StudentHome from '@/app/(student)/(drawer)/home';
 import { AuthSession } from '../types/auth';
 
 type MockStudent = {
@@ -23,6 +24,8 @@ export async function loginStudent(
   const student = mockStudents.find(
     s => s.erpId === erpId && s.password === password,
   );
+
+  console.log(student)
 
   if (!student) {
     return null;

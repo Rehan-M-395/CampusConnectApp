@@ -7,6 +7,7 @@ import { sendNotification } from "./services/firebaseAdmin";
 import notificationRoutes from "./routes/notificationRoutes";
 import authRoutes from "./routes/authRoutes";
 import gatePassRoutes from "./routes/gatePassRoutes";
+import studentAttendanceRoutes from "./routes/studentRoutes";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.get("/", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/gate-passes", gatePassRoutes);
+app.use("/api/student", studentAttendanceRoutes);
 
 app.post("/api/send-notification", async (req, res) => {
   try {
