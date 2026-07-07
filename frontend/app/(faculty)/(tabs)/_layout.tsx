@@ -75,7 +75,26 @@ export default function FacultyDrawerLayout() {
           ),
         }}
       />
-    </Drawer>
+
+       <Drawer.Screen
+        name="StudentAttendance"
+        options={{
+          title: 'Student Attendance',
+          drawerLabel: 'Student Attendance',
+          drawerIcon: ({ color, size }) => (
+       <Ionicons name="people-outline" color={color} size={size} />
+          ),
+        }}
+      />
+
+           </Drawer>
+
+     
+
+        
+    
+
+
   );
 }
 
