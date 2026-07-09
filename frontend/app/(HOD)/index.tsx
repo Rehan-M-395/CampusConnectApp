@@ -115,14 +115,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 4,
   },
-  detailedReportButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#d1a550',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
   btnIcon: {
     marginRight: 6,
   },
@@ -146,7 +138,7 @@ const styles = StyleSheet.create({
   },
   studentBorder: {
     borderLeftWidth: 4,
-    borderLeftColor: '#450a0a',
+    borderLeftColor: '#e09c15',
   },
   staffBorder: {
     borderLeftWidth: 4,

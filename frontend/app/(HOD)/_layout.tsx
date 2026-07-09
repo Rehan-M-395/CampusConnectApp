@@ -13,11 +13,11 @@ function CustomDrawerContent(props: any) {
     <View style={styles.drawerContainer}>
       <View style={styles.profileSection}>
         <View style={styles.avatarContainer}>
-          <Ionicons name="person-circle" size={48} color="#450a0a" />
+          <Ionicons name="person-circle" size={48} color="#d1a550" />
         </View>
         <View style={styles.profileTextContainer}>
           <Text style={styles.profileName}>HOD Office</Text>
-          <Text style={styles.profileRole}>DEPARTMENT ADMIN</Text>
+          <Text style={styles.profileRole}>Department Head</Text>
         </View>
       </View>
 
@@ -30,7 +30,7 @@ function CustomDrawerContent(props: any) {
           <Ionicons
             name="bar-chart-outline"
             size={22}
-            color={activeRouteName === 'index' ? '#450a0a' : '#475569'}
+            color={activeRouteName === 'index' ? '#d1a550' : '#475569'}
           />
           <Text style={[styles.drawerItemText, activeRouteName === 'index' && styles.drawerItemTextActive]}>
             Reports
@@ -45,7 +45,7 @@ function CustomDrawerContent(props: any) {
           <Ionicons
             name="briefcase-outline"
             size={22}
-            color={activeRouteName === 'staff' ? '#450a0a' : '#475569'}
+            color={activeRouteName === 'staff' ? '#d1a550' : '#475569'}
           />
           <Text style={[styles.drawerItemText, activeRouteName === 'staff' && styles.drawerItemTextActive]}>
             Staff
@@ -60,7 +60,7 @@ function CustomDrawerContent(props: any) {
           <Ionicons
             name="people-outline"
             size={22}
-            color={activeRouteName === 'students' ? '#450a0a' : '#475569'}
+            color={activeRouteName === 'students' ? '#d1a550' : '#475569'}
           />
           <Text style={[styles.drawerItemText, activeRouteName === 'students' && styles.drawerItemTextActive]}>
             Students
@@ -152,11 +152,13 @@ const styles = StyleSheet.create({
   },
   profileSection: {
     padding: 20,
-    paddingTop: 50,
+    paddingTop: 60,
+    paddingBottom: 24,
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    backgroundColor: '#450a0a',
+    borderBottomWidth: 3,
+    borderBottomColor: '#d1a550',
   },
   avatarContainer: {
     marginRight: 12,
@@ -165,18 +167,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0f172a',
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 0.5,
   },
   profileRole: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#64748b',
+    color: '#d1a550',
     marginTop: 2,
   },
   scrollContent: {
-    paddingTop: 10,
+    paddingTop: 16,
     paddingHorizontal: 12,
   },
   drawerItem: {
@@ -184,13 +187,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: 8,
     marginBottom: 6,
+    borderLeftWidth: 4,
+    borderLeftColor: 'transparent',
   },
   drawerItemActive: {
-    backgroundColor: '#fee2e2',
-    borderLeftWidth: 4,
-    borderLeftColor: '#450a0a',
+    backgroundColor: 'transparent',
+    borderLeftColor: '#d1a550',
   },
   drawerItemText: {
     fontSize: 15,
@@ -199,7 +203,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   drawerItemTextActive: {
-    color: '#450a0a',
+    color: '#d1a550',
     fontWeight: '700',
   },
   bottomSection: {
