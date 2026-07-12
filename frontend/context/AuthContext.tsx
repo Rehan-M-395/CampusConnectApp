@@ -24,7 +24,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
-  const apiBaseUrl = 'http://192.168.231.10:5000'; // Replace with your actual API base URL
+  const apiBaseUrl = 'http://192.168.231.10:5000';
+  // const apiBaseUrl = 'http://localho?st:5000';  // Replace with your actual API base URL
 
   useEffect(() => {
     const bootstrap = async () => {
