@@ -4,9 +4,10 @@ import { clearFCMToken, removeStoredFCMToken } from '../services/notificationSer
 import { AuthSession } from '../types/auth';
 
 const TOKEN_KEY = 'token';
-const USER_KEY = 'user';
 const ROLE_KEY = 'role';
+ export const USER_KEY = 'user';
 const LAST_LOGIN_CREDENTIALS_KEY = 'last_login_credentials';
+
 
 type AuthContextValue = {
   session: AuthSession | null;
@@ -24,7 +25,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
-  const apiBaseUrl = 'http://192.168.231.10:5000';
+  const apiBaseUrl = 'http://10.250.122.90:5000';  // Replace with your actual API base URL
   // const apiBaseUrl = 'http://localho?st:5000';  // Replace with your actual API base URL
 
   useEffect(() => {
@@ -69,7 +70,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
           AsyncStorage.setItem(TOKEN_KEY, nextSession.token),
           AsyncStorage.setItem(USER_KEY, JSON.stringify(nextSession.user)),
           AsyncStorage.setItem(ROLE_KEY, nextSession.role),
+          
         ]);
+        console.log(JSON.stringify(nextSession.user, null, 2));
 
         setSession(nextSession);
       },
@@ -111,3 +114,4 @@ export function useAuth() {
 
   return context;
 }
+

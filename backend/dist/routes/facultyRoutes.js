@@ -13,4 +13,5 @@ router.post("/gate-pass", authMiddleware_1.authenticateRequest, (0, authMiddlewa
 router.post("/save-token", authMiddleware_1.authenticateRequest, (0, authMiddleware_1.authorizeRoles)("faculty"), facultyController_1.saveFacultyToken);
 router.post("/trigger-notification", authMiddleware_1.authenticateRequest, (0, authMiddleware_1.authorizeRoles)("faculty"), facultyController_1.triggerFacultyNotification);
 router.post("/insert-session", authMiddleware_1.authenticateRequest, multerConfig_1.default.array("images"), (0, authMiddleware_1.authorizeRoles)("faculty"), facultyController_1.insertSession);
+router.get("/teacher/:teacherId", facultyController_1.getTeacherAttendance);
 exports.default = router;

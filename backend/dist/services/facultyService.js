@@ -76,9 +76,13 @@ class FacultyService {
             })
                 .eq("id", sessionID)
                 .select();
+            console.log("data:", data);
+            console.log("error:", error);
             if (error) {
+                console.log("got the error");
                 throw new Error(error.message);
             }
+            console.log("changed to pending");
             return data;
         });
     }

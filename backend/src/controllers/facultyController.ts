@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { FacultyService } from "../services";
 import { uploadImage } from "../utils/cloudinary";
+// import supabase from "../config/supabase";
+import { supabase } from "../config/supabase";
 
 export const createFacultyGatePass = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -146,3 +148,117 @@ export const insertSession = async (
   }
 };
 
+export const getTeacherAttendance = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { teacherId } = req.params;
+
+    // Get all sessions of this teacher
+    const { data: sessions, error: sessionError } = await supabase
+      .from("sessions")
+      .select(`
+        id,
+        faculty_erpid,
+        subject_id,
+        division,
+        division_id,
+        department_id,
+        session_date,
+        start_time,
+        end_time,
+        present_count,
+        absent_count,
+        status,
+        location,
+        semester,
+        year
+      `)
+      .eq("faculty_erpid", teacherId)
+      .order("session_date", { ascending: false });
+
+    if (sessionError) {
+      res.status(400).json({
+        success: false,
+        message: sessionError.message,
+      });
+      return;
+    }
+
+    if (!sessions || sessions.length === 0) {
+      res.status(200).json({
+        success: true,
+        count: 0,
+        sessions: [],
+      });
+      return;
+    }
+
+    // Get all session ids
+    const sessionIds = sessions.map((session) => session.id);
+
+    // Get attendance for those sessions
+    const { data: attendance, error: attendanceError } = await supabase
+      .from("attendance_details")
+      .select("*")
+      .in("session_id", sessionIds)
+      .order("student_erpid", { ascending: true });
+
+    if (attendanceError) {
+      res.status(400).json({
+        success: false,
+        message: attendanceError.message,
+      });
+      return;
+    }
+
+    // Attach attendance to each session
+    // const result = sessions.map((session) => ({
+    //   ...session,
+    //   attendance: attendance.filter(
+    //     (record) => record.session_id === session.id
+    //   ),
+    // }));
+
+    const result = sessions.map((session) => {
+  const sessionAttendance = attendance.filter(
+    (record) => record.session_id === session.id
+  );
+
+  const presentCount = sessionAttendance.filter(
+    (record) => record.status === "Present"
+  ).length;
+
+  const absentCount = sessionAttendance.filter(
+    (record) => record.status === "Absent"
+  ).length;
+
+  return {
+    ...session,
+
+    // Override incorrect values from database
+    present_count: presentCount,
+    absent_count: absentCount,
+
+    attendance: sessionAttendance,
+  };
+});
+
+    res.status(200).json({
+      success: true,
+      count: result.length,
+      sessions: result,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Internal Server Error",
+    });
+  }
+};

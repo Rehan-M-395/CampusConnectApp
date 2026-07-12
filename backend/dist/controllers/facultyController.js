@@ -20,9 +20,11 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.insertSession = exports.triggerFacultyNotification = exports.saveFacultyToken = exports.createFacultyGatePass = void 0;
+exports.getTeacherAttendance = exports.insertSession = exports.triggerFacultyNotification = exports.saveFacultyToken = exports.createFacultyGatePass = void 0;
 const services_1 = require("../services");
 const cloudinary_1 = require("../utils/cloudinary");
+// import supabase from "../config/supabase";
+const supabase_1 = require("../config/supabase");
 const createFacultyGatePass = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e, _f, _g;
     try {
@@ -112,12 +114,11 @@ const insertSession = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 };
             })));
         }
-        console.log("Uploaded Images:", uploadedImages);
+        // console.log("Uploaded Images:", uploadedImages);
+        console.log("before pednding");
         // Update the session with image URLs and mark it completed
-        // await FacultyService.completeSession(
-        //   sessionID,
-        //   uploadedImages
-        // );
+        yield services_1.FacultyService.completeSession(sessionID);
+        console.log("after pedning");
         res.status(201).json({
             success: true,
             message: "Session created successfully",
@@ -136,3 +137,77 @@ const insertSession = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.insertSession = insertSession;
+const getTeacherAttendance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { teacherId } = req.params;
+        // Get all sessions of this teacher
+        const { data: sessions, error: sessionError } = yield supabase_1.supabase
+            .from("sessions")
+            .select(`
+        id,
+        faculty_erpid,
+        subject_id,
+        division,
+        division_id,
+        department_id,
+        session_date,
+        start_time,
+        end_time,
+        present_count,
+        absent_count,
+        status,
+        location,
+        semester,
+        year
+      `)
+            .eq("faculty_erpid", teacherId)
+            .order("session_date", { ascending: false });
+        if (sessionError) {
+            res.status(400).json({
+                success: false,
+                message: sessionError.message,
+            });
+            return;
+        }
+        if (!sessions || sessions.length === 0) {
+            res.status(200).json({
+                success: true,
+                count: 0,
+                sessions: [],
+            });
+            return;
+        }
+        // Get all session ids
+        const sessionIds = sessions.map((session) => session.id);
+        // Get attendance for those sessions
+        const { data: attendance, error: attendanceError } = yield supabase_1.supabase
+            .from("attendance_details")
+            .select("*")
+            .in("session_id", sessionIds)
+            .order("student_erpid", { ascending: true });
+        if (attendanceError) {
+            res.status(400).json({
+                success: false,
+                message: attendanceError.message,
+            });
+            return;
+        }
+        // Attach attendance to each session
+        const result = sessions.map((session) => (Object.assign(Object.assign({}, session), { attendance: attendance.filter((record) => record.session_id === session.id) })));
+        res.status(200).json({
+            success: true,
+            count: result.length,
+            sessions: result,
+        });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: error instanceof Error
+                ? error.message
+                : "Internal Server Error",
+        });
+    }
+});
+exports.getTeacherAttendance = getTeacherAttendance;
