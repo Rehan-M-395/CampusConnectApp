@@ -4,7 +4,7 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
+  ScrollView,
 } from "react-native";
 import SessionCard from './SessionCard';
 import { attendanceData } from './dummyAttendance';
@@ -128,134 +128,148 @@ const filteredSessions = sessionSummaries.filter(session => {
 
   return (
     <SafeAreaView style={styles.container}>
+  <ScrollView
+    showsVerticalScrollIndicator={false}
+    contentContainerStyle={styles.scrollContent}
+  >
     <Text style={styles.heading}>
       Attendance History
     </Text>
 
+    {/* Today's Summary */}
+
     <View style={styles.summaryCard}>
-  <Text style={styles.summaryHeading}>
-    Today's Summary
-  </Text>
+      <Text style={styles.summaryHeading}>
+        Today's Summary
+      </Text>
 
-  <View style={styles.summaryRow}>
-    <Text style={styles.summaryLabel}>
-      Sessions Taken
-    </Text>
+      <View style={styles.summaryRow}>
+        <Text style={styles.summaryLabel}>
+          Sessions Taken
+        </Text>
 
-    <Text style={styles.summaryValue}>
-      {summary.sessions}
-    </Text>
-  </View>
+        <Text style={styles.summaryValue}>
+          {summary.sessions}
+        </Text>
+      </View>
 
-  <View style={styles.summaryRow}>
-    <Text style={styles.summaryLabel}>
-      Present
-    </Text>
+      <View style={styles.summaryRow}>
+        <Text style={styles.summaryLabel}>
+          Present
+        </Text>
 
-    <Text style={styles.summaryValue}>
-      {summary.present}
-    </Text>
-  </View>
+        <Text style={styles.summaryValue}>
+          {summary.present}
+        </Text>
+      </View>
 
-  <View style={styles.summaryRow}>
-    <Text style={styles.summaryLabel}>
-      Absent
-    </Text>
+      <View style={styles.summaryRow}>
+        <Text style={styles.summaryLabel}>
+          Absent
+        </Text>
 
-    <Text style={styles.summaryValue}>
-      {summary.absent}
-    </Text>
-  </View>
+        <Text style={styles.summaryValue}>
+          {summary.absent}
+        </Text>
+      </View>
 
-  <View style={styles.summaryRow}>
-    <Text style={styles.summaryLabel}>
-      Overall Attendance
-    </Text>
+      <View style={styles.summaryRow}>
+        <Text style={styles.summaryLabel}>
+          Overall Attendance
+        </Text>
 
-    <Text style={styles.summaryValue}>
-      {summary.percentage.toFixed(1)}%
-    </Text>
-  </View>
-</View>
+        <Text style={styles.summaryValue}>
+          {summary.percentage.toFixed(1)}%
+        </Text>
+      </View>
+    </View>
 
-<View style={styles.filterCard}>
+    {/* Filters */}
 
-  <Text style={styles.filterTitle}>
-    Filters
-  </Text>
+    <View style={styles.filterCard}>
+      <Text style={styles.filterTitle}>
+        Filters
+      </Text>
 
-  <Text style={styles.filterLabel}>
-    Date
-  </Text>
+      <Text style={styles.filterLabel}>
+        Date
+      </Text>
 
-  <Picker
-    selectedValue={selectedDate}
-    onValueChange={setSelectedDate}
-  >
-    {availableDates.map(date => (
-      <Picker.Item
-        key={date}
-        label={date}
-        value={date}
+      <Picker
+        selectedValue={selectedDate}
+        onValueChange={setSelectedDate}
+        style={styles.picker}
+        dropdownIconColor="#7f1d1d"
+        itemStyle={{ color: "#222" }}
+      >
+        {availableDates.map((date) => (
+          <Picker.Item
+            key={date}
+            label={date}
+            value={date}
+          />
+        ))}
+      </Picker>
+
+      <Text style={styles.filterLabel}>
+        Subject
+      </Text>
+
+      <Picker
+        selectedValue={selectedSubject}
+        onValueChange={setSelectedSubject}
+        style={styles.picker}
+        dropdownIconColor="#7f1d1d"
+        itemStyle={{ color: "#222" }}
+      >
+        {availableSubjects.map((subject) => (
+          <Picker.Item
+            key={subject}
+            label={subject}
+            value={subject}
+          />
+        ))}
+      </Picker>
+
+      <Text style={styles.filterLabel}>
+        Division
+      </Text>
+
+      <Picker
+        selectedValue={selectedDivision}
+        onValueChange={setSelectedDivision}
+        style={styles.picker}
+        dropdownIconColor="#7f1d1d"
+        itemStyle={{ color: "#222" }}
+      >
+        {availableDivisions.map((division) => (
+          <Picker.Item
+            key={division}
+            label={division}
+            value={division}
+          />
+        ))}
+      </Picker>
+    </View>
+
+    {/* Session Cards */}
+
+    {filteredSessions.map((item) => (
+      <SessionCard
+        key={item.sessionId}
+        sessionId={item.sessionId}
+        subject={item.subject}
+        division={item.division}
+        present={item.present}
+        absent={item.absent}
+        total={item.total}
+        onPress={() => {
+          console.log(item.sessionId);
+        }}
       />
     ))}
-  </Picker>
-
-  <Text style={styles.filterLabel}>
-    Subject
-  </Text>
-
-  <Picker
-    selectedValue={selectedSubject}
-    onValueChange={setSelectedSubject}
-  >
-    {availableSubjects.map(subject => (
-      <Picker.Item
-        key={subject}
-        label={subject}
-        value={subject}
-      />
-    ))}
-  </Picker>
-
-  <Text style={styles.filterLabel}>
-    Division
-  </Text>
-
-  <Picker
-    selectedValue={selectedDivision}
-    onValueChange={setSelectedDivision}
-  >
-    {availableDivisions.map(division => (
-      <Picker.Item
-        key={division}
-        label={division}
-        value={division}
-      />
-    ))}
-  </Picker>
-
-</View>
-
-    <FlatList
-      data={filteredSessions}
-      keyExtractor={(item) => item.sessionId.toString()}
-      renderItem={({ item }) => (
-        <SessionCard
-          sessionId={item.sessionId}
-          subject={item.subject}
-          division={item.division}
-          present={item.present}
-          absent={item.absent}
-          total={item.total}
-          onPress={() => {
-            console.log(item.sessionId);
-          }}
-        />
-      )}
-    />
-  </SafeAreaView>
-  );
+  </ScrollView>
+</SafeAreaView>  );
 }
 
 const styles = StyleSheet.create({
@@ -331,6 +345,13 @@ filterLabel: {
   marginBottom: 4,
   color: "#555",
   fontWeight: "600",
+},
+picker: {
+    color: "#222",          // Selected text color
+    backgroundColor: "#fff",
+},
+scrollContent: {
+  paddingBottom: 30,
 },
 
 });

@@ -72,7 +72,7 @@ class FacultyService {
             const { data, error } = yield supabase_1.supabase
                 .from("sessions")
                 .update({
-                status: "PENDING",
+                status: "pending",
             })
                 .eq("id", sessionID)
                 .select();

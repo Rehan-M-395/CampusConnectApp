@@ -452,6 +452,7 @@ const onChangeEndTime = (_event: any, selectedDate?: Date) => {
       }
 
       const API_BASE_URL = "192.168.231.10:5000";
+      // const API_BASE_URL = "localhost:5000";
 
       const res = await fetch(
         `http://${API_BASE_URL}/api/faculty/insert-session`,

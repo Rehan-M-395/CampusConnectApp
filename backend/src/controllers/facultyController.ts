@@ -118,13 +118,15 @@ export const insertSession = async (
       );
     }
 
-    console.log("Uploaded Images:", uploadedImages);
+    // console.log("Uploaded Images:", uploadedImages);
+    console.log("before pednding");
 
     // Update the session with image URLs and mark it completed
-    // await FacultyService.completeSession(
-    //   sessionID,
-    //   uploadedImages
-    // );
+    await FacultyService.completeSession(
+      sessionID
+    );
+
+    console.log("after pedning");
 
     res.status(201).json({
       success: true,
