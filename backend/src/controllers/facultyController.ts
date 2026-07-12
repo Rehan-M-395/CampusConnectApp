@@ -93,6 +93,8 @@ export const insertSession = async (
       facultyErpid
     );
 
+    console.log("this is sessionID", sessionID);
+
     const folderName = `session_no_${sessionID}`;
 
     let uploadedImages: {
@@ -119,10 +121,10 @@ export const insertSession = async (
     console.log("Uploaded Images:", uploadedImages);
 
     // Update the session with image URLs and mark it completed
-    await FacultyService.completeSession(
-      sessionID,
-      uploadedImages
-    );
+    // await FacultyService.completeSession(
+    //   sessionID,
+    //   uploadedImages
+    // );
 
     res.status(201).json({
       success: true,

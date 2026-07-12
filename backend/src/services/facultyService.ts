@@ -67,27 +67,21 @@ class FacultyService {
     return data.id;
   }
 
-  static async completeSession(
-      sessionID: number,
-      images: {
-        url: string;
-        publicId: string;
-      }[]
-    ) {
-      const { data, error } = await supabase
-        .from("sessions")
-        .update({
-          images,
-          status: "COMPLETED",
-        })
-        .eq("id", sessionID);
+  static async completeSession(sessionID: number) {
+    const { data, error } = await supabase
+      .from("sessions")
+      .update({
+        status: "PENDING",
+      })
+      .eq("id", sessionID)
+      .select();
 
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return data;
+    if (error) {
+      throw new Error(error.message);
     }
+
+    return data;
+  }
 }
 
 

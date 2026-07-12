@@ -11,10 +11,21 @@ export const uploadImage = (
         resource_type: "image",
       },
       (error, result) => {
-        if (error) return reject(error);
+        console.log("=== Cloudinary Callback ===");
+        console.log("Error:", error);
+        console.log("Result:", result);
+
+        if (error) {
+          return reject(error);
+        }
+
         resolve(result);
       }
     );
+
+    stream.on("error", (err) => {
+      console.log("Stream error:", err);
+    });
 
     stream.end(buffer);
   });

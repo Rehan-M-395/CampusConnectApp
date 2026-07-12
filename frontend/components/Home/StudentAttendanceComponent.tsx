@@ -163,6 +163,7 @@ const [startTime, setStartTime] = useState<Date | null>(null);
 const [endTime, setEndTime] = useState<Date | null>(null);
 const [showStartPicker, setShowStartPicker] = useState(false);
 const [showEndPicker, setShowEndPicker] = useState(false);
+const [loading, setLoading] = useState(false);
 
 const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 const [showDatePicker, setShowDatePicker] = useState(false);
@@ -197,6 +198,22 @@ const handleReset = () => {
     ]
   );
 };
+
+const handleAfterSubmit = () => {
+          setSelectedYear('');
+          setSelectedDepartment('');
+          setSelectedSemester('');
+          setSelectedSection('');
+          setSelectedSubject('');
+          setBatch('');
+          setLocation('');
+
+          setSelectedDate(null);
+          setStartTime(null);
+          setEndTime(null);
+          setOpenDropdownId(null);
+          setPhotos(initialPhotoState);
+}
 
 const formatDate = (date: Date | null) => {
   if (!date) return '';
@@ -326,47 +343,46 @@ const onChangeEndTime = (_event: any, selectedDate?: Date) => {
   const handleSubmit = async () => {
     console.log('[StudentAttendance] Submit button pressed');
 
-//     if (!selectedYear) {
-//       Alert.alert('Missing info', 'Please select a year.');
-//       return;
-//     }
-//     if (!selectedDepartment) {
-//       Alert.alert('Missing info', 'Please select a department.');
-//       return;
-//     }
-//     if (!selectedSemester) {
-//       Alert.alert('Missing info', 'Please select a semester.');
-//       return;
-//     }
-//     if (!selectedSection) {
-//       Alert.alert('Missing info', 'Please select a section.');
-//       return;
-//     }
+        if (!selectedYear) {
+          Alert.alert('Missing info', 'Please select a year.');
+          return;
+        }
+        if (!selectedDepartment) {
+          Alert.alert('Missing info', 'Please select a department.');
+          return;
+        }
+        if (!selectedSemester) {
+          Alert.alert('Missing info', 'Please select a semester.');
+          return;
+        }
+        if (!selectedSection) {
+          Alert.alert('Missing info', 'Please select a section.');
+          return;
+        }
 
-//     if(!location) {
-//       Alert.alert('Missing info', 'Please enter a location.');
-//       return;
-//     }
-//     if (!selectedSubject) {
-//       Alert.alert('Missing info', 'Please select a subject.');
-//       return;
-//     }
+        if(!location) {
+          Alert.alert('Missing info', 'Please enter a location.');
+          return;
+        }
+        if (!selectedSubject) {
+          Alert.alert('Missing info', 'Please select a subject.');
+          return;
+        }
 
-//     if (!selectedDate) {
-//   Alert.alert('Missing info', 'Please select a date.');
-//   return;
-// }
+        if (!selectedDate) {
+          Alert.alert('Missing info', 'Please select a date.');
+          return;
+        }
 
+        if (!startTime || !endTime) {
+          Alert.alert('Missing info', 'Please select start and end time.');
+          return;
+        }
+        if (endTime <= startTime) {
+          Alert.alert('Invalid time', 'End time must be after start time.');
+          return;
+        }
 
-
-//     if (!startTime || !endTime) {
-//   Alert.alert('Missing info', 'Please select start and end time.');
-//   return;
-// }
-// if (endTime <= startTime) {
-//   Alert.alert('Invalid time', 'End time must be after start time.');
-//   return;
-//}
     const payload = {
     // Hardcoded values for testing
     faculty_erpid: "FAC001",
@@ -408,6 +424,7 @@ const onChangeEndTime = (_event: any, selectedDate?: Date) => {
     }
 
     try {
+      setLoading(true);
       const token = await AsyncStorage.getItem("token");
 
       const formData = new FormData();
@@ -434,7 +451,7 @@ const onChangeEndTime = (_event: any, selectedDate?: Date) => {
         console.log(key, value);
       }
 
-      const API_BASE_URL = "10.96.45.10:5000";
+      const API_BASE_URL = "192.168.231.10:5000";
 
       const res = await fetch(
         `http://${API_BASE_URL}/api/faculty/insert-session`,
@@ -467,6 +484,9 @@ const onChangeEndTime = (_event: any, selectedDate?: Date) => {
         "Network Error",
         err instanceof Error ? err.message : "Please try again."
       );
+    } finally {
+      setLoading(false);
+      handleAfterSubmit();
     }
   };
 
@@ -766,15 +786,23 @@ const onChangeEndTime = (_event: any, selectedDate?: Date) => {
 
       <View style={styles.buttonGroup}>
 
-    <TouchableOpacity
-      style={styles.submitButton}
-      onPress={() => {
-        console.log('[StudentAttendance] TouchableOpacity pressed');
-        void handleSubmit();
-      }}
-    >
-      <Text style={styles.submitButtonText}>Submit</Text>
-    </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.submitButton,
+          loading && { opacity: 0.7 },
+        ]}
+        disabled={loading}
+        onPress={() => {
+          console.log("[StudentAttendance] TouchableOpacity pressed");
+          void handleSubmit();
+        }}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.submitButtonText}>Submit</Text>
+        )}
+      </TouchableOpacity>
 
   <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
     <Text style={styles.resetButtonText}>Reset</Text>
