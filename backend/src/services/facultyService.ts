@@ -64,8 +64,32 @@ class FacultyService {
       throw new Error(error.message);
     }
 
-    return data;
+    return data.id;
   }
+
+  static async completeSession(
+      sessionID: number,
+      images: {
+        url: string;
+        publicId: string;
+      }[]
+    ) {
+      const { data, error } = await supabase
+        .from("sessions")
+        .update({
+          images,
+          status: "COMPLETED",
+        })
+        .eq("id", sessionID);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data;
+    }
 }
+
+
 
 export default FacultyService;

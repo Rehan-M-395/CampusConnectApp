@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { FacultyService } from "../services";
+import { uploadImage } from "../utils/cloudinary";
 
 export const createFacultyGatePass = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -81,34 +82,55 @@ export const insertSession = async (
   res: Response
 ): Promise<void> => {
   try {
-    console.log("Route hit");
-
-    const {images, ...payload} = req.body;
+    const { images, ...payload } = req.body;
     const files = req.files as Express.Multer.File[];
-
-    console.log("Payload:", payload);
-    console.log("Files:", files);
 
     const facultyErpid = req.authUser!.erpId;
 
-    const session = await FacultyService.sessionStart(payload, facultyErpid);
+    // Create session and get the generated session ID
+    const sessionID = await FacultyService.sessionStart(
+      payload,
+      facultyErpid
+    );
 
-    console.log(files.length, "files uploaded");
+    const folderName = `session_no_${sessionID}`;
 
-    // Upload files to Cloudinary here
+    let uploadedImages: {
+      url: string;
+      publicId: string;
+    }[] = [];
+
     if (files && files.length > 0) {
-      for (const file of files) {
-        console.log(file.originalname);
-        console.log(file.mimetype);
-        console.log(file.size);
-        console.log(file.buffer); // This is what you'll upload
-      }
+      uploadedImages = await Promise.all(
+        files.map(async (file) => {
+          const result: any = await uploadImage(
+            file.buffer,
+            folderName
+          );
+
+          return {
+            url: result.secure_url,
+            publicId: result.public_id,
+          };
+        })
+      );
     }
+
+    console.log("Uploaded Images:", uploadedImages);
+
+    // Update the session with image URLs and mark it completed
+    await FacultyService.completeSession(
+      sessionID,
+      uploadedImages
+    );
 
     res.status(201).json({
       success: true,
       message: "Session created successfully",
-      data: session,
+      data: {
+        sessionID,
+        images: uploadedImages,
+      },
     });
   } catch (error: any) {
     console.error(error);
@@ -119,3 +141,4 @@ export const insertSession = async (
     });
   }
 };
+
