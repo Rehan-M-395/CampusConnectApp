@@ -43,16 +43,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.removeFcmToken = exports.storeFcmToken = exports.login = void 0;
-const authService_1 = __importStar(require("../services/authService"));
+const authService_1 = __importStar(require("../services/auth/authService"));
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d;
     try {
+        console.log(req.body);
         console.log("[auth/login] request received", {
             erpId: (_a = req.body) === null || _a === void 0 ? void 0 : _a.erpId,
             role: (_b = req.body) === null || _b === void 0 ? void 0 : _b.role,
         });
         const loginResponse = yield (0, authService_1.loginWithErpCredentials)(req.body);
-        
         console.log("[auth/login] success", {
             erpId: loginResponse.user.erpId,
             role: loginResponse.role,
@@ -108,7 +108,7 @@ const removeFcmToken = (req, res) => __awaiter(void 0, void 0, void 0, function*
             res.status(400).json({ error: "ERP ID is required." });
             return;
         }
-        const { error } = yield (yield Promise.resolve().then(() => __importStar(require("../services/supabase")))).supabase
+        const { error } = yield (yield Promise.resolve().then(() => __importStar(require("../config/supabase")))).supabase
             .from("fcm_tokens")
             .delete()
             .eq("erpid", erpId);

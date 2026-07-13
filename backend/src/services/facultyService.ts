@@ -64,8 +64,31 @@ class FacultyService {
       throw new Error(error.message);
     }
 
+    return data.id;
+  }
+
+  static async completeSession(sessionID: number) {
+    const { data, error } = await supabase
+      .from("sessions")
+      .update({
+        status: "pending",
+      })
+      .eq("id", sessionID)
+      .select();
+
+      console.log("data:", data);
+      console.log("error:", error);
+
+      if (error) {
+        console.log("got the error");
+        throw new Error(error.message);
+      }
+
+    console.log("changed to pending");
     return data;
   }
 }
+
+
 
 export default FacultyService;

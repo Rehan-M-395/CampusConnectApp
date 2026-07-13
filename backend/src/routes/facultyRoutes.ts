@@ -4,7 +4,8 @@ import {
   createFacultyGatePass,
   saveFacultyToken,
   triggerFacultyNotification,
-  insertSession
+  insertSession,
+  getTeacherAttendance
 } from "../controllers/facultyController";
 import upload from "../config/multerConfig";
 
@@ -16,5 +17,9 @@ router.post("/gate-pass", authenticateRequest, authorizeRoles("faculty"), create
 router.post("/save-token", authenticateRequest, authorizeRoles("faculty"), saveFacultyToken);
 router.post("/trigger-notification", authenticateRequest, authorizeRoles("faculty"), triggerFacultyNotification);
 router.post("/insert-session", authenticateRequest, upload.array("images"), authorizeRoles("faculty"), insertSession);
+router.get(
+  "/teacher/:teacherId",
+  getTeacherAttendance
+);
 
 export default router;
