@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { FacultyService } from "../services";
 import { uploadImage } from "../utils/cloudinary";
+// import supabase from "../config/supabase";
+import { supabase } from "../config/supabase";
 
 export const createFacultyGatePass = async (req: Request, res: Response): Promise<void> => {
   try {
