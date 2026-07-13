@@ -7,8 +7,20 @@ import {
   ScrollView,
 } from "react-native";
 import SessionCard from './SessionCard';
-import { attendanceData } from './dummyAttendance';
+import {   RefreshControl } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import { Session } from "../../../types/session";
+import { getTeacherAttendance } from "../../../services/attendanceService";
+import { useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useCallback } from 'react';
+import { ActivityIndicator } from "react-native";
+
+import { useIsFocused } from "@react-navigation/native";
+
+import { USER_KEY } from '../../../context/AuthContext';
+
+
 
 type SessionSummary = {
   sessionId: number;
@@ -35,30 +47,10 @@ const sessionSummaries = useMemo(() => {
         sessionId: record.session_id,
         sessionDate: record.session_date,
 
-        subject: `Subject ${record.subject_id}`,
-        division: record.division_id,
 
-        present: 0,
-        absent: 0,
-        total: 0,
-      });
-    }
+const [loading, setLoading] = useState(true);
 
-    const session = grouped.get(record.session_id)!;
-
-    session.total++;
-
-    if (record.status === "Present") {
-      session.present++;
-    } else {
-      session.absent++;
-    }
-  });
-
-  return Array.from(grouped.values()).sort(
-    (a, b) => a.sessionId - b.sessionId
-  );
-}, []);
+const [refreshing, setRefreshing] = useState(false);
 
 const summary = useMemo(() => {
   const sessions = sessionSummaries.length;
@@ -86,9 +78,62 @@ const summary = useMemo(() => {
   };
 }, [sessionSummaries]);
 
-const [selectedDate, setSelectedDate] = useState("All");
-const [selectedSubject, setSelectedSubject] = useState("All");
-const [selectedDivision, setSelectedDivision] = useState("All");
+
+const isFocused = useIsFocused();
+
+useEffect(() => {
+  if (isFocused) {
+    console.log("Attendance screen focused");
+    loadAttendance();
+  }
+}, [isFocused]);
+ 
+  
+
+const loadAttendance = async () => {
+  try {
+    const userJson = await AsyncStorage.getItem(USER_KEY);
+   
+    const user = userJson ? JSON.parse(userJson) : null;
+    const teacherId = user?.erpId;
+  
+
+    if (!teacherId) {
+      throw new Error("No logged-in teacher found. Please sign in again.");
+    }
+
+    const data = await getTeacherAttendance(teacherId);
+    console.log("this is data",data);
+    console.log("data from backend");
+
+setSessions(data);
+
+    
+  } catch (err) {
+    console.log(err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+const onRefresh = async () => {
+  try {
+    setRefreshing(true);
+   
+
+    await loadAttendance(); // Fetch latest attendance
+
+   
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setRefreshing(false);
+  }
+};
+
+
 
 const availableDates = [
   "All",
@@ -131,6 +176,13 @@ const filteredSessions = sessionSummaries.filter(session => {
   <ScrollView
     showsVerticalScrollIndicator={false}
     contentContainerStyle={styles.scrollContent}
+    refreshControl={
+    <RefreshControl
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+    />
+  }
+
   >
     <Text style={styles.heading}>
       Attendance History
@@ -138,7 +190,7 @@ const filteredSessions = sessionSummaries.filter(session => {
 
     {/* Today's Summary */}
 
-    <View style={styles.summaryCard}>
+    {/* <View style={styles.summaryCard}>
       <Text style={styles.summaryHeading}>
         Today's Summary
       </Text>
@@ -182,7 +234,60 @@ const filteredSessions = sessionSummaries.filter(session => {
           {summary.percentage.toFixed(1)}%
         </Text>
       </View>
+    </View> */}
+
+    <View style={styles.summaryCard}>
+  <Text style={styles.summaryHeading}>
+    Today's Summary
+  </Text>
+
+  {refreshing && (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="small" color="#7f1d1d" />
+      <Text style={styles.loadingText}>Refreshing...</Text>
     </View>
+  )}
+
+  <View style={styles.summaryRow}>
+    <Text style={styles.summaryLabel}>
+      Sessions Taken
+    </Text>
+
+    <Text style={styles.summaryValue}>
+      {summary.sessions}
+    </Text>
+  </View>
+
+  <View style={styles.summaryRow}>
+    <Text style={styles.summaryLabel}>
+      Present
+    </Text>
+
+    <Text style={styles.summaryValue}>
+      {summary.present}
+    </Text>
+  </View>
+
+  <View style={styles.summaryRow}>
+    <Text style={styles.summaryLabel}>
+      Absent
+    </Text>
+
+    <Text style={styles.summaryValue}>
+      {summary.absent}
+    </Text>
+  </View>
+
+  <View style={styles.summaryRow}>
+    <Text style={styles.summaryLabel}>
+      Overall Attendance
+    </Text>
+
+    <Text style={styles.summaryValue}>
+      {summary.percentage.toFixed(1)}%
+    </Text>
+  </View>
+</View>
 
     {/* Filters */}
 
@@ -308,6 +413,19 @@ summaryRow: {
   flexDirection: "row",
   justifyContent: "space-between",
   marginBottom: 10,
+},
+
+loadingContainer: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  marginVertical: 10,
+},
+
+loadingText: {
+  marginLeft: 8,
+  color: "#666",
+  fontSize: 14,
 },
 
 summaryLabel: {
