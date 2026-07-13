@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
   },
   drawerItemActive: {
-    backgroundColor: '#feac07',
+    backgroundColor: '#e6b552',
     borderLeftColor: '#d54821',
   },
   drawerItemText: {
