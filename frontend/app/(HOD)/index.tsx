@@ -222,16 +222,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
-  trendLoadingWrapper: {
-    height: 120,
-    backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   loadingText: {
     fontSize: 12,
     color: '#94a3b8',

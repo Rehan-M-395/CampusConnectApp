@@ -13,7 +13,7 @@ function CustomDrawerContent(props: any) {
     <View style={styles.drawerContainer}>
       <View style={styles.profileSection}>
         <View style={styles.avatarContainer}>
-          <Ionicons name="person-circle" size={48} color="#d1a550" />
+          <Ionicons name="person-circle" size={48} color="#f0e9dc" />
         </View>
         <View style={styles.profileTextContainer}>
           <Text style={styles.profileName}>HOD -- Department</Text>
@@ -30,10 +30,10 @@ function CustomDrawerContent(props: any) {
           <Ionicons
             name="bar-chart-outline"
             size={22}
-            color={activeRouteName === 'index' ? '#d1a550' : '#475569'}
+            color={activeRouteName === 'index' ? '#cb4f36' : '#475569'}
           />
           <Text style={[styles.drawerItemText, activeRouteName === 'index' && styles.drawerItemTextActive]}>
-            Reports
+            Dashboard
           </Text>
         </TouchableOpacity>
 
@@ -45,7 +45,7 @@ function CustomDrawerContent(props: any) {
           <Ionicons
             name="briefcase-outline"
             size={22}
-            color={activeRouteName === 'staff' ? '#d1a550' : '#475569'}
+            color={activeRouteName === 'staff' ? '#cb4f36' : '#475569'}
           />
           <Text style={[styles.drawerItemText, activeRouteName === 'staff' && styles.drawerItemTextActive]}>
             Staff
@@ -60,7 +60,7 @@ function CustomDrawerContent(props: any) {
           <Ionicons
             name="people-outline"
             size={22}
-            color={activeRouteName === 'students' ? '#d1a550' : '#475569'}
+            color={activeRouteName === 'students' ? '#cb4f36' : '#475569'}
           />
           <Text style={[styles.drawerItemText, activeRouteName === 'students' && styles.drawerItemTextActive]}>
             Students
@@ -106,7 +106,7 @@ export default function HODLayout() {
       <Drawer.Screen
         name="index"
         options={{
-          title: 'Reports',
+          title: 'Dashboard',
         }}
       />
       <Drawer.Screen
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   profileRole: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#d1a550',
+    color: '#e3dbcb',
     marginTop: 2,
   },
   scrollContent: {
@@ -193,8 +193,8 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
   },
   drawerItemActive: {
-    backgroundColor: 'transparent',
-    borderLeftColor: '#d1a550',
+    backgroundColor: '#feac07',
+    borderLeftColor: '#d54821',
   },
   drawerItemText: {
     fontSize: 15,
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   drawerItemTextActive: {
-    color: '#d1a550',
+    color: '#cb4f36',
     fontWeight: '700',
   },
   bottomSection: {
