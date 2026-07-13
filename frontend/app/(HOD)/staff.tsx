@@ -67,7 +67,7 @@ export default function StaffTab() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Today's Attendance</Text>
-        <DonutChart percentage={attendancePercentage} color="#450a0a" />
+        <DonutChart percentage={attendancePercentage} color="#ae2525" />
 
         <View style={styles.statsRow}>
           <View style={styles.statBox}>

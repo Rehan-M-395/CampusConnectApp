@@ -69,7 +69,7 @@ export default function StudentsTab() {
         <Text style={styles.sectionTitle}>Today's Attendance</Text>
         
         {/* Pie Chart*/}
-        <DonutChart percentage={attendancePercentage} color="#450a0a" />
+        <DonutChart percentage={attendancePercentage} color="#ae2525" />
 
         <View style={styles.statsRow}>
           <View style={styles.statBox}>

@@ -16,7 +16,7 @@ function CustomDrawerContent(props: any) {
           <Ionicons name="person-circle" size={48} color="#d1a550" />
         </View>
         <View style={styles.profileTextContainer}>
-          <Text style={styles.profileName}>HOD Office</Text>
+          <Text style={styles.profileName}>HOD -- Department</Text>
           <Text style={styles.profileRole}>Department Head</Text>
         </View>
       </View>

@@ -56,24 +56,7 @@ export default function HODDashboard() {
       {/* Departmental stats */}
       <Text style={styles.sectionHeader}>Departmental Statistics</Text>
       <View style={styles.pulseContainer}>
-        {/* Trend Analysis Card */}
-        <View style={styles.trendCard}>
-          <View style={styles.trendHeader}>
-            <Text style={styles.cardTitleBold}>Weekly Trend Analysis</Text>
-            <View style={styles.timeButtons}>
-              <View style={styles.timeButtonActive}>
-                <Text style={styles.timeButtonTextActive}>30 Days</Text>
-              </View>
-              <View style={styles.timeButton}>
-                <Text style={styles.timeButtonText}>7 Days</Text>
-              </View>
-            </View>
-          </View>
-          <View style={styles.trendLoadingWrapper}>
-            <Ionicons name="stats-chart" size={32} color="#94a3b8" />
-            <Text style={styles.loadingText}>Departmental stats loading...</Text>
-          </View>
-        </View>
+
       </View>
     </ScrollView>
   );
