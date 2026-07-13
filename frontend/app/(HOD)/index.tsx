@@ -11,7 +11,7 @@ export default function HODDashboard() {
             <Text style={styles.heroPercentage}>
               -- <Text style={styles.percentSign}> %</Text>
             </Text>
-            <Text style={styles.heroSubtext}>Campus-wide Presence Today</Text>
+            <Text style={styles.heroSubtext}>Your Attendance</Text>
           </View>
         </View>
       </View>
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   heroCard: {
-    backgroundColor: '#450a0a',
+    backgroundColor: '#ae2525',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   detailedReportText: {
-    color: '#450a0a',
+    color: '#ae2525',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   timeButtonActive: {
-    backgroundColor: '#450a0a',
+    backgroundColor: '#ae2525',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,

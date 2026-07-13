@@ -127,7 +127,7 @@ export default function HODLayout() {
 
 const styles = StyleSheet.create({
   headerStyle: {
-    backgroundColor: '#450a0a',
+    backgroundColor: '#ae2525',
   },
   headerTitle: {
     color: '#ffffff',
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#450a0a',
+    backgroundColor: '#ae2525',
     borderBottomWidth: 3,
     borderBottomColor: '#d1a550',
   },
