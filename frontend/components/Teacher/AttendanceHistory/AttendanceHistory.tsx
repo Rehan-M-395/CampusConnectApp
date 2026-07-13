@@ -12,7 +12,7 @@ import { Session } from "../../../types/session";
 import { getTeacherAttendance } from "../../../services/attendanceService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { USER_KEY } from '../../../context/AuthContext';
-
+import { router } from "expo-router";
 
 
 type SessionSummary = {
@@ -281,10 +281,12 @@ if (loading) {
       (item.absent_count ?? 0)
     }
     onPress={() => {
-      console.log(item.attendance);
-      // navigation.navigate("AttendanceDetails", {
-      //   attendance: item.attendance,
-      // });
+      router.navigate({
+        pathname: "/(faculty)/session-details",
+        params: {
+          sessionId: item.id.toString(),
+        },
+      });
     }}
   />
 ))}

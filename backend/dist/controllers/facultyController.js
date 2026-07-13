@@ -193,7 +193,20 @@ const getTeacherAttendance = (req, res) => __awaiter(void 0, void 0, void 0, fun
             return;
         }
         // Attach attendance to each session
-        const result = sessions.map((session) => (Object.assign(Object.assign({}, session), { attendance: attendance.filter((record) => record.session_id === session.id) })));
+        // const result = sessions.map((session) => ({
+        //   ...session,
+        //   attendance: attendance.filter(
+        //     (record) => record.session_id === session.id
+        //   ),
+        // }));
+        const result = sessions.map((session) => {
+            const sessionAttendance = attendance.filter((record) => record.session_id === session.id);
+            const presentCount = sessionAttendance.filter((record) => record.status === "Present").length;
+            const absentCount = sessionAttendance.filter((record) => record.status === "Absent").length;
+            return Object.assign(Object.assign({}, session), { 
+                // Override incorrect values from database
+                present_count: presentCount, absent_count: absentCount, attendance: sessionAttendance });
+        });
         res.status(200).json({
             success: true,
             count: result.length,
