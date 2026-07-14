@@ -193,8 +193,8 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
   },
   drawerItemActive: {
-    backgroundColor: '#e6b552',
-    borderLeftColor: '#d54821',
+    backgroundColor: '#e2b967',
+    borderLeftColor: '#db542e',
   },
   drawerItemText: {
     fontSize: 15,
@@ -210,14 +210,6 @@ const styles = StyleSheet.create({
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
-  },
-  generateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#450a0a',
-    paddingVertical: 12,
-    borderRadius: 10,
   },
   buttonIcon: {
     marginRight: 8,
