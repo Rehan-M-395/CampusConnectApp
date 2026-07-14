@@ -7,12 +7,19 @@ import {
   ScrollView,
 } from "react-native";
 import SessionCard from './SessionCard';
+import {   RefreshControl } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { Session } from "../../../types/session";
 import { getTeacherAttendance } from "../../../services/attendanceService";
+import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { USER_KEY } from '../../../context/AuthContext';
+import { useCallback } from 'react';
+import { ActivityIndicator } from "react-native";
 
+import { useIsFocused } from "@react-navigation/native";
+
+import { USER_KEY } from '../../../context/AuthContext';
+import { router } from "expo-router";
 
 
 type SessionSummary = {
@@ -37,7 +44,10 @@ const [selectedSubject, setSelectedSubject] = useState("All");
 const [selectedDivision, setSelectedDivision] = useState("All");
 const [sessions, setSessions] = useState<Session[]>([]);
 
+
 const [loading, setLoading] = useState(true);
+
+const [refreshing, setRefreshing] = useState(false);
 
 const summary = useMemo(() => {
   const sessionsTaken = sessions.length;
@@ -63,22 +73,32 @@ const summary = useMemo(() => {
 }, [sessions]);
 
 
+const isFocused = useIsFocused();
+
 useEffect(() => {
-  loadAttendance();
-}, []);
+  if (isFocused) {
+    console.log("Attendance screen focused");
+    loadAttendance();
+  }
+}, [isFocused]);
+ 
+  
 
 const loadAttendance = async () => {
   try {
- const userJson = await AsyncStorage.getItem(USER_KEY);
+    const userJson = await AsyncStorage.getItem(USER_KEY);
+   
     const user = userJson ? JSON.parse(userJson) : null;
     const teacherId = user?.erpId;
+  
 
     if (!teacherId) {
       throw new Error("No logged-in teacher found. Please sign in again.");
     }
 
     const data = await getTeacherAttendance(teacherId);
-
+    console.log("this is data",data);
+   
 setSessions(data);
 
     
@@ -88,6 +108,25 @@ setSessions(data);
     setLoading(false);
   }
 };
+
+
+
+const onRefresh = async () => {
+  try {
+    setRefreshing(true);
+   
+
+    await loadAttendance(); // Fetch latest attendance
+
+   
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setRefreshing(false);
+  }
+};
+
+
 
 const availableDates = [
   "All",
@@ -144,6 +183,13 @@ if (loading) {
   <ScrollView
     showsVerticalScrollIndicator={false}
     contentContainerStyle={styles.scrollContent}
+    refreshControl={
+    <RefreshControl
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+    />
+  }
+
   >
     <Text style={styles.heading}>
       Attendance History
@@ -151,7 +197,7 @@ if (loading) {
 
     {/* Today's Summary */}
 
-    <View style={styles.summaryCard}>
+    {/* <View style={styles.summaryCard}>
       <Text style={styles.summaryHeading}>
         Today's Summary
       </Text>
@@ -195,7 +241,60 @@ if (loading) {
           {summary.percentage.toFixed(1)}%
         </Text>
       </View>
+    </View> */}
+
+    <View style={styles.summaryCard}>
+  <Text style={styles.summaryHeading}>
+    Today's Summary
+  </Text>
+
+  {refreshing && (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="small" color="#7f1d1d" />
+      <Text style={styles.loadingText}>Refreshing...</Text>
     </View>
+  )}
+
+  <View style={styles.summaryRow}>
+    <Text style={styles.summaryLabel}>
+      Sessions Taken
+    </Text>
+
+    <Text style={styles.summaryValue}>
+      {summary.sessions}
+    </Text>
+  </View>
+
+  <View style={styles.summaryRow}>
+    <Text style={styles.summaryLabel}>
+      Present
+    </Text>
+
+    <Text style={styles.summaryValue}>
+      {summary.present}
+    </Text>
+  </View>
+
+  <View style={styles.summaryRow}>
+    <Text style={styles.summaryLabel}>
+      Absent
+    </Text>
+
+    <Text style={styles.summaryValue}>
+      {summary.absent}
+    </Text>
+  </View>
+
+  <View style={styles.summaryRow}>
+    <Text style={styles.summaryLabel}>
+      Overall Attendance
+    </Text>
+
+    <Text style={styles.summaryValue}>
+      {summary.percentage.toFixed(1)}%
+    </Text>
+  </View>
+</View>
 
     {/* Filters */}
 
@@ -281,10 +380,12 @@ if (loading) {
       (item.absent_count ?? 0)
     }
     onPress={() => {
-      console.log(item.attendance);
-      // navigation.navigate("AttendanceDetails", {
-      //   attendance: item.attendance,
-      // });
+      router.navigate({
+        pathname: "/(faculty)/session-details",
+        params: {
+          sessionId: item.id.toString(),
+        },
+      });
     }}
   />
 ))}
@@ -330,6 +431,19 @@ summaryRow: {
   flexDirection: "row",
   justifyContent: "space-between",
   marginBottom: 10,
+},
+
+loadingContainer: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  marginVertical: 10,
+},
+
+loadingText: {
+  marginLeft: 8,
+  color: "#666",
+  fontSize: 14,
 },
 
 summaryLabel: {

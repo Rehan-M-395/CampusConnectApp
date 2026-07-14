@@ -5,7 +5,7 @@ import { AuthSession } from '../types/auth';
 
 const TOKEN_KEY = 'token';
 const ROLE_KEY = 'role';
- export const USER_KEY = 'user';
+export const USER_KEY = 'user';
 const LAST_LOGIN_CREDENTIALS_KEY = 'last_login_credentials';
 
 
@@ -26,6 +26,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   // const apiBaseUrl = 'http://10.250.122.90:5000';  // Replace with your actual API base URL
+  //  const apiBaseUrl="https://campusconnectapp-lu1d.onrender.com"
   // const apiBaseUrl = 'http://localho?st:5000';  // Replace with your actual API base URL
   const apiBaseUrl = 'https://campusconnectapp-lu1d.onrender.com';
 
@@ -71,7 +72,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
           AsyncStorage.setItem(TOKEN_KEY, nextSession.token),
           AsyncStorage.setItem(USER_KEY, JSON.stringify(nextSession.user)),
           AsyncStorage.setItem(ROLE_KEY, nextSession.role),
-          
+
         ]);
         console.log(JSON.stringify(nextSession.user, null, 2));
 

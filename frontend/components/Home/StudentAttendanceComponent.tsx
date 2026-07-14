@@ -451,11 +451,12 @@ const onChangeEndTime = (_event: any, selectedDate?: Date) => {
         console.log(key, value);
       }
 
-      const API_BASE_URL = "192.168.231.10:5000";
+//       const API_BASE_URL = "https://campusconnectapp-lu1d.onrender.com";
       // const API_BASE_URL = "localhost:5000";
+      const API_BASE_URL = 'https://campusconnectapp-lu1d.onrender.com';
 
       const res = await fetch(
-        `http://${API_BASE_URL}/api/faculty/insert-session`,
+        `${API_BASE_URL}/api/faculty/insert-session`,
         {
           method: "POST",
           headers: {
@@ -1155,10 +1156,7 @@ halfWidth: {
     fontWeight: '700',
     fontSize: 16,
   },
- 
- 
 
- 
  submitButton: {
   flex: 1,
   backgroundColor: '#7f1d1d',
