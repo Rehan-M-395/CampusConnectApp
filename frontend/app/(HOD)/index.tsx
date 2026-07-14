@@ -52,12 +52,6 @@ export default function HODDashboard() {
           </View>
         </View>
       </View>
-
-      {/* Departmental stats */}
-      <Text style={styles.sectionHeader}>Departmental Statistics</Text>
-      <View style={styles.pulseContainer}>
-
-      </View>
     </ScrollView>
   );
 }
@@ -101,23 +95,20 @@ const styles = StyleSheet.create({
   btnIcon: {
     marginRight: 6,
   },
-  detailedReportText: {
-    color: '#ae2525',
-    fontSize: 12,
-    fontWeight: '700',
-  },
   summaryRow: {
-    flexDirection: 'column',
+    flexDirection: 'row',
+    flexWrap : 'wrap',
     gap: 12,
     marginBottom: 20,
   },
   summaryCard: {
+    flex : 1,
+    minWidth : 290,
     backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    position: 'relative',
   },
   studentBorder: {
     borderLeftWidth: 4,
@@ -167,60 +158,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#0f172a',
-    marginBottom: 12,
-  },
-  pulseContainer: {
-    flexDirection: 'column',
-    gap: 16,
-    marginBottom: 20,
-  },
-  trendCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  trendHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
   cardTitleBold: {
     fontSize: 15,
     fontWeight: '800',
     color: '#0f172a',
-  },
-  timeButtons: {
-    flexDirection: 'row',
-    backgroundColor: '#f1f5f9',
-    padding: 2,
-    borderRadius: 8,
-  },
-  timeButtonActive: {
-    backgroundColor: '#ae2525',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  timeButtonTextActive: {
-    color: '#ffffff',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  timeButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  timeButtonText: {
-    color: '#475569',
-    fontSize: 11,
-    fontWeight: '600',
   },
   loadingText: {
     fontSize: 12,
