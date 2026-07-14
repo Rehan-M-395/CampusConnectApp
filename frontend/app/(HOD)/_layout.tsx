@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ae2525',
     borderBottomWidth: 3,
-    borderBottomColor: '#d1a550',
+    borderBottomColor: '#ffd723',
   },
   avatarContainer: {
     marginRight: 12,
