@@ -1,9 +1,11 @@
 import { Session } from "../types/session";
 
+const API_URL = "https://campusconnectapp-lu1d.onrender.com/api";
+
 export async function getTeacherAttendance(
   teacherId: string
 ): Promise<Session[]> {
-  const API_URL = "https://campusconnectapp-lu1d.onrender.com"; // Replace with your actual API base URL
+  // const API_URL = "https://campusconnectapp-lu1d.onrender.com"; // Replace with your actual API base URL
   try {
     const response = await fetch(
       `${API_URL}/api/faculty/teacher/${teacherId}`

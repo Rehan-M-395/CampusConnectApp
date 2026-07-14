@@ -156,7 +156,7 @@ export const getTeacherAttendance = async (
 ): Promise<void> => {
   try {
     const { teacherId } = req.params;
-
+    
     // Get all sessions of this teacher
     const { data: sessions, error: sessionError } = await supabase
       .from("sessions")
