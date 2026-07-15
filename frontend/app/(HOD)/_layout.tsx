@@ -57,7 +57,7 @@ function CustomDrawerContent(props: any) {
           style={[styles.drawerItem, activeRouteName === 'non_teaching_staff' && styles.drawerItemActive]}
           onPress={() => props.navigation.navigate('non_teaching_staff')}>
           <Ionicons
-            name = "briefcase-outline"
+            name = "mail"
             size={22}
             color={activeRouteName === 'non_teaching_staff' ? '#cb4f36' : '#475569'}
           />
