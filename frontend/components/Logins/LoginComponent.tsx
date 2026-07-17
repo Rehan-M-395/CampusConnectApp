@@ -32,6 +32,7 @@ const ROLE_OPTIONS: RoleOption[] = [
   { label: 'Faculty', value: 'faculty' },
   { label: 'Security Guard', value: 'guard' },
   { label: 'Student', value: 'student'},
+  { label: 'HOD', value: 'hod' },
 ];
 
 export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComponentProps) {
@@ -67,7 +68,7 @@ export default function LoginComponent({ apiBaseUrl, onLoginSuccess }: LoginComp
           if (parsedUser.erpId) {
             setErpId(parsedUser.erpId);
           }
-          if (parsedUser.role === 'faculty' || parsedUser.role === 'guard' || parsedUser.role === 'student') {
+          if (parsedUser.role === 'faculty' || parsedUser.role === 'guard' || parsedUser.role === 'student' || parsedUser.role === 'hod') {
             setRole(parsedUser.role);
           }
         }
