@@ -101,7 +101,7 @@ const loadAttendance = async () => {
     }
 
     const data = await getTeacherAttendance(teacherId);
- //   console.log("this is data",data);
+  //  console.log("this is data",data);
    
 setSessions(data);
 

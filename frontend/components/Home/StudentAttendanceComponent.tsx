@@ -18,6 +18,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 
 import { Ionicons } from '@expo/vector-icons';
+import { API_BASE_URL } from '../../constants/env';
 
 const YEAR_OPTIONS: string[] = [
   'First Year', 'Second Year', 'Third Year', 'Fourth Year'
@@ -450,17 +451,6 @@ const onChangeEndTime = (_event: any, selectedDate?: Date) => {
       for (const [key, value] of (formData as any)._parts) {
         console.log(key, value);
       }
-
-//       const API_BASE_URL = "https://campusconnectapp-lu1d.onrender.com";
-      // const API_BASE_URL = "localhost:5000";
-
-    
-
-      const API_BASE_URL = 'https://campusconnectapp-lu1d.onrender.com';
-
-  // const API_BASE_URL = "http://10.109.186.90:5000";
-
-
 
       const res = await fetch(
         `${API_BASE_URL}/api/faculty/insert-session`,

@@ -1,22 +1,18 @@
 import { Session } from "../types/session";
-
-const API_URL = "https://campusconnectapp-lu1d.onrender.com";
-
-// const API_URL = "http://10.109.186.90:5000/api";
+import { API_BASE_URL } from "../constants/env";
 
 export async function getTeacherAttendance(
   teacherId: string
 ): Promise<Session[]> {
-  // const API_URL = "https://campusconnectapp-lu1d.onrender.com"; // Replace with your actual API base URL
   try {
     const response = await fetch(
-      `${API_URL}/faculty/teacher/${teacherId}`
+      `${API_BASE_URL}/api/faculty/teacher/${teacherId}`
     );
 
     console.log("Status:", response.status);
 
     const text = await response.text();
-    console.log("Response:", text);
+    // console.log("Response:", text);
 
     // If request failed, log the response and throw an error
     if (!response.ok) {
@@ -28,7 +24,7 @@ export async function getTeacherAttendance(
     // Parse JSON only after confirming it's a successful response
     const result = JSON.parse(text);
 
-    console.log("Parsed Result:", result);
+    // console.log("Parsed Result:", result);
 
     if (!result.success) {
       throw new Error(result.message || "Failed to fetch attendance");
@@ -48,7 +44,7 @@ export async function getSessionAttendance(
   
 ) {
   const response = await fetch(
-    `${API_URL}/faculty/teacher/session/${sessionId}`
+    `${API_BASE_URL}/api/faculty/teacher/session/${sessionId}`
   //  console.log("Status:", response.status);
 
   
@@ -69,7 +65,7 @@ export async function updateAttendance(
   status: "Present" | "Absent"
 ) {
   const response = await fetch(
-    `${API_URL}/faculty/attendance/${attendanceId}`,
+    `${API_BASE_URL}/api/faculty/attendance/${attendanceId}`,
     {
       method: "PATCH",
       headers: {

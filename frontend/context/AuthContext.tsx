@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 import { clearFCMToken, removeStoredFCMToken } from '../services/notificationService';
+import { API_BASE_URL } from '../constants/env';
 import { AuthSession } from '../types/auth';
 
 const TOKEN_KEY = 'token';
@@ -24,16 +25,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSigningOut, setIsSigningOut] = useState(false);
-
-  // const apiBaseUrl = 'http://10.250.122.90:5000';  // Replace with your actual API base URL
-  //  const apiBaseUrl="https://campusconnectapp-lu1d.onrender.com"
-  // const apiBaseUrl = 'http://localho?st:5000';  // Replace with your actual API base URL
-
-
-  const apiBaseUrl = 'https://campusconnectapp-lu1d.onrender.com';
-
-
-// const apiBaseUrl= "http://10.109.186.90:5000";
+  const apiBaseUrl = API_BASE_URL;
 
   useEffect(() => {
     const bootstrap = async () => {
