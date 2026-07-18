@@ -42,9 +42,6 @@ export const authenticateHod = async (
   }
 
   if (!data.department_id) {
-    // This HOD row exists but has no department assigned yet — HOD-scoped
-    // endpoints (dashboard/students/staff) will not work until this is set
-    // on the `hod` table in Supabase.
     throw new Error(
       "This HOD account has no department assigned yet. Please ask an admin to set a department for this account.",
     );

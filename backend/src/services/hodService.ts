@@ -97,11 +97,6 @@ class HodService {
     };
   }
 
-  // ---------- STAFF ----------
-  // `users` has no department FK, only free-text `dept` — see buildDeptOrFilter.
-  // `role` is also inconsistently cased ("faculty" / "Faculty"), so match
-  // it case-insensitively too.
-
   static async getStaffErpIds(departmentName: string, departmentShortCode?: string): Promise<string[]> {
     const { data, error } = await supabase
       .from("users")
@@ -166,8 +161,6 @@ class HodService {
       history,
     };
   }
-
-  // ---------- DASHBOARD ----------
 
   static async getDashboard(
     departmentId: number,
