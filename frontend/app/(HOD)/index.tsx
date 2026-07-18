@@ -1,13 +1,17 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '@/context/AuthContext';
 
 export default function HODDashboard() {
+  const {session} = useAuth();
+  const hodName = session?.user?.name ?? 'HOD';
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.heroCard}>
         <View style={styles.heroBody}>
           <View>
+            <Text style = {styles.herowlc}>Welcome, {hodName} </Text>
             <Text style={styles.heroPercentage}>
               -- <Text style={styles.percentSign}> %</Text>
             </Text>
@@ -69,13 +73,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#ae2525',
     borderRadius: 16,
     padding: 20,
-    marginBottom: 16,
+    marginBottom: 20,
+  },
+  herowlc: {
+    fontSize: 26,
+    fontFamily: 'Instrument Sans',
+    fontWeight: '400',
+    color: '#f0ebe2',
   },
   heroBody: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    marginTop: 10,
+    marginTop: 8,
   },
   heroPercentage: {
     fontSize: 42,

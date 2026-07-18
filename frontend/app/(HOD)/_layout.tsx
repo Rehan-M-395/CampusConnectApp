@@ -6,8 +6,11 @@ import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { useRouter } from 'expo-router';
 
 function CustomDrawerContent(props: any) {
-  // Find active route index
   const activeRouteName = props.state.routeNames[props.state.index];
+    const {session} = useAuth();
+    const hodName = session?.user?.name ?? 'HOD';
+    const Department = session?.user?.departmentName ?? 'HOD';
+    const erpId = session?.user?.erpId ?? 'HOD';
 
   return (
     <View style={styles.drawerContainer}>
@@ -16,8 +19,8 @@ function CustomDrawerContent(props: any) {
           <Ionicons name="person-circle" size={48} color="#f0e9dc" />
         </View>
         <View style={styles.profileTextContainer}>
-          <Text style={styles.profileName}>HOD -- Department</Text>
-          <Text style={styles.profileRole}>Department Head</Text>
+          <Text style={styles.profileName}>HOD of {Department} Department</Text>
+          <Text style={styles.profileRole}>Erpid : {erpId}</Text>
         </View>
       </View>
 
@@ -188,15 +191,16 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '500',
+    fontFamily:'Times New Roman',
     color: '#ffffff',
-    letterSpacing: 0.5,
+    letterSpacing: 0.7,
   },
   profileRole: {
     fontSize: 12,
     fontWeight: '600',
     color: '#e3dbcb',
-    marginTop: 2,
+    marginTop: 12,
   },
   scrollContent: {
     paddingTop: 16,
