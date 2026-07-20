@@ -49,6 +49,7 @@ export const insertSession = async (
   try {
     const { images, ...payload } = req.body;
     const files = req.files as Express.Multer.File[];
+    console.log(payload);
 
     const facultyErpid = req.authUser!.erpId;
 
