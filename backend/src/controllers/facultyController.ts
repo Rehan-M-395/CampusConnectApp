@@ -49,6 +49,7 @@ export const insertSession = async (
   try {
     const { images, ...payload } = req.body;
     const files = req.files as Express.Multer.File[];
+    console.log(payload);
 
     const facultyErpid = req.authUser!.erpId;
 
@@ -59,6 +60,11 @@ export const insertSession = async (
     );
 
     console.log("this is sessionID", sessionID);
+
+    await FacultyService.initializeAttendance(
+      sessionID,
+      payload
+    );
 
     const folderName = `session_no_${sessionID}`;
 
@@ -110,8 +116,6 @@ export const insertSession = async (
     });
   }
 };
-
-//added 
 
 export const getTeacherAttendance = async (
   req: Request,
@@ -177,14 +181,6 @@ export const getTeacherAttendance = async (
       });
       return;
     }
-
-    // Attach attendance to each session
-    // const result = sessions.map((session) => ({
-    //   ...session,
-    //   attendance: attendance.filter(
-    //     (record) => record.session_id === session.id
-    //   ),
-    // }));
 
     const result = sessions.map((session) => {
   const sessionAttendance = attendance.filter(
@@ -316,3 +312,17 @@ export const updateAttendance = async (
     });
   }
 };
+
+export const getDropdownData = async(req: Request, res: Response) => {
+  try {
+    const data = await FacultyService.getDropdownData();
+
+    return res.status(200).json(data);
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: error instanceof Error ? error.message : "Internal Server Error",
+    });
+  }
+}

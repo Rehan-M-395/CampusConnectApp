@@ -14,16 +14,16 @@ export const DEPARTMENT_OPTIONS = [
 ] as const;
 
 export const SUBJECT_OPTIONS = [
-  { label: "Mathematics", value: 101 },
-  { label: "Physics", value: 102 },
-  { label: "Chemistry", value: 103 },
-  { label: "Computer Science", value: 104 },
-  { label: "Electronics", value: 105 },
-  { label: "Mechanics", value: 106 },
+  { label: "Mathematics", value: 4 },
+  { label: "Physics", value: 3 },
+  { label: "Chemistry", value: 5 },
+  { label: "Computer Science", value: 6 },
+  { label: "Electronics", value: 7 },
+  { label: "Mechanics", value: 8 },
 ] as const;
 
 export const SECTION_OPTIONS = [
-  { label: "Section A", division: "A", divisionId: "A" },
+  { label: "Section F", division: "F", divisionId: "5" },
   { label: "Section B", division: "B", divisionId: "B" },
   { label: "Section C", division: "C", divisionId: "C" },
   { label: "Section D", division: "D", divisionId: "D" },

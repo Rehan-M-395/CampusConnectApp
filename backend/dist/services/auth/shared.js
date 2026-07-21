@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authenticateFromTable = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const supabase_1 = require("../../config/supabase");
+const ROLE_COLUMN = "role";
 const coerceStringValue = (value) => {
     if (value === null || value === undefined) {
         return null;
@@ -60,23 +61,36 @@ const comparePassword = (password, storedValue) => __awaiter(void 0, void 0, voi
     }
     return password === storedValue;
 });
+const buildIdentifierCandidates = (erpId) => {
+    const trimmed = erpId.trim();
+    const upper = trimmed.toUpperCase();
+    return [...new Set([trimmed, upper])].filter(Boolean);
+};
+const buildOrFilter = (idColumns, candidateValues) => idColumns
+    .flatMap((column) => candidateValues.map((value) => `${column}.eq.${value}`))
+    .join(",");
 const authenticateFromTable = (config, erpId, password) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const normalizedErpId = normalizeIdentifier(erpId);
-    const { data, error } = yield supabase_1.supabase.from(config.tableName).select("*").limit(1000);
+    const identifierCandidates = buildIdentifierCandidates(erpId);
+    let query = supabase_1.supabase
+        .from(config.tableName)
+        .select("*")
+        .or(buildOrFilter(config.idColumns, identifierCandidates))
+        .limit(10);
+    if ((_a = config.allowedRoleValues) === null || _a === void 0 ? void 0 : _a.length) {
+        query = query.in(ROLE_COLUMN, config.allowedRoleValues);
+    }
+    const { data, error } = yield query;
     if (error) {
         throw error;
     }
     const matchingRow = (data !== null && data !== void 0 ? data : []).find((row) => {
-        var _a;
         const rowErpId = resolveFirstString(row, config.idColumns);
         if (normalizeIdentifier(rowErpId) !== normalizedErpId) {
             return false;
         }
-        if (!((_a = config.allowedRoleValues) === null || _a === void 0 ? void 0 : _a.length)) {
-            return true;
-        }
-        const rowRole = resolveFirstString(row, ["role"]);
-        return config.allowedRoleValues.some(allowedRole => normalizeIdentifier(allowedRole) === normalizeIdentifier(rowRole));
+        return true;
     });
     if (!matchingRow) {
         throw new Error(`${config.role} account not found.`);

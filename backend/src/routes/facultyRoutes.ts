@@ -7,6 +7,7 @@ import {
   insertSession,
   getTeacherAttendance,
   getSessionAttendance,
+  getDropdownData,
   updateAttendance,
 } from "../controllers/facultyController";
 import upload from "../config/multerConfig";
@@ -18,6 +19,7 @@ const router = Router();
 console.log("facultyRoutes loaded");
 
 router.post("/gate-pass", authenticateRequest, authorizeRoles("faculty"), createFacultyGatePass);
+router.get("/dropdown-data", authenticateRequest, authorizeRoles("faculty"), getDropdownData);
 router.post("/save-token", authenticateRequest, authorizeRoles("faculty"), saveFacultyToken);
 router.post("/trigger-notification", authenticateRequest, authorizeRoles("faculty"), triggerFacultyNotification);
 router.post("/insert-session", authenticateRequest, upload.array("images"), authorizeRoles("faculty"), insertSession);
@@ -35,6 +37,5 @@ router.patch(
   "/attendance/:attendanceId",
   updateAttendance
 );
-
 
 export default router;
