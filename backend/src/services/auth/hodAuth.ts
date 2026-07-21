@@ -1,10 +1,6 @@
 import { supabase } from "../../config/supabase";
 import { AuthUser } from "../../types/auth";
 
-// TEMPORARY: the `hod` table has no password column yet, so every HOD
-// account authenticates with this shared default password for now.
-const HOD_TEMP_PASSWORD = "12345678";
-
 type HodRow = {
   id: number;
   erpid: string;
@@ -12,19 +8,17 @@ type HodRow = {
   is_active: boolean;
   department_id: number | null;
   departments: { name: string; short_code: string | null } | { name: string; short_code: string | null }[] | null;
+  password: string | null;
 };
 
 export const authenticateHod = async (
   erpId: string,
   password: string,
 ): Promise<AuthUser> => {
-  if (password !== HOD_TEMP_PASSWORD) {
-    throw new Error("Invalid password.");
-  }
 
   const { data, error } = await supabase
     .from("hod")
-    .select("id, erpid, name, is_active, department_id, departments ( name, short_code )")
+    .select("id, erpid, name, is_active, department_id, departments ( name, short_code ), password")
     .ilike("erpid", erpId)
     .limit(1)
     .maybeSingle<HodRow>();
@@ -35,6 +29,10 @@ export const authenticateHod = async (
 
   if (!data) {
     throw new Error("HOD account not found.");
+  }
+
+  if (password !== data.password){
+    throw new Error("Invalid password.");
   }
 
   if (data.is_active === false) {
