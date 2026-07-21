@@ -12,29 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const supabase_1 = require("../config/supabase");
 const firebaseAdmin_1 = require("../config/firebaseAdmin");
 class FacultyService {
-    static createGatePass(teacherErpId, teacherName, payload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { data, error } = yield supabase_1.supabase
-                .from("gate_pass_requests")
-                .insert({
-                teacher_erpid: teacherErpId,
-                teacher_name: teacherName,
-                parent_name: payload.parent_name.trim(),
-                num_persons: payload.num_persons,
-                visit_date: payload.visit_date.trim(),
-                visit_time: payload.visit_time.trim(),
-                phone: payload.phone.trim(),
-                email: payload.email.trim(),
-                reason: payload.reason.trim(),
-            })
-                .select()
-                .single();
-            if (error) {
-                throw new Error(error.message);
-            }
-            return data;
-        });
-    }
     static saveToken(erpid, token) {
         return __awaiter(this, void 0, void 0, function* () {
             const { error } = yield supabase_1.supabase
@@ -84,6 +61,77 @@ class FacultyService {
             }
             console.log("changed to pending");
             return data;
+        });
+    }
+    static initializeAttendance(sessionID, payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { department_id, division_id, year, subject_id, session_date, } = payload;
+            // Fetch all students of the class
+            const { data: students, error: studentError } = yield supabase_1.supabase
+                .from("students")
+                .select("erpid")
+                .eq("department_id", department_id)
+                .eq("division_id", division_id)
+                .eq("year", year);
+            if (studentError) {
+                throw new Error(studentError.message);
+            }
+            if (!students || students.length === 0) {
+                return;
+            }
+            // Create attendance rows with default status = Absent
+            const attendanceRows = students.map((student) => ({
+                student_erpid: student.erpid,
+                session_id: sessionID,
+                subject_id,
+                division_id,
+                department_id,
+                session_date,
+                status: "Absent",
+                source: "system",
+                confidence: null,
+                marked_by: null,
+                detected_at: null,
+            }));
+            const { error: insertError } = yield supabase_1.supabase
+                .from("attendance_details")
+                .insert(attendanceRows);
+            if (insertError) {
+                throw new Error(insertError.message);
+            }
+            return attendanceRows.length;
+        });
+    }
+    static getDropdownData() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Subjects
+            const { data: subjects, error: subjectError } = yield supabase_1.supabase
+                .from("subjects")
+                .select("id, name")
+                .order("name");
+            if (subjectError) {
+                throw new Error(subjectError.message);
+            }
+            // Divisions
+            const { data: divisions, error: divisionError } = yield supabase_1.supabase
+                .from("divisions")
+                .select("id, div_name")
+                .order("div_name");
+            if (divisionError) {
+                throw new Error(divisionError.message);
+            }
+            console.log("subject", subjects, "sections", divisions);
+            return {
+                subjects: subjects.map((subject) => ({
+                    label: subject.subject_name,
+                    value: subject.id,
+                })),
+                sections: divisions.map((division) => ({
+                    label: `Section ${division.div_name}`,
+                    division: division.div_name,
+                    divisionId: division.id,
+                })),
+            };
         });
     }
 }

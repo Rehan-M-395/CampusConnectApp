@@ -20,47 +20,13 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateAttendance = exports.getSessionAttendance = exports.getTeacherAttendance = exports.insertSession = exports.triggerFacultyNotification = exports.saveFacultyToken = exports.createFacultyGatePass = void 0;
+exports.getDropdownData = exports.updateAttendance = exports.getSessionAttendance = exports.getTeacherAttendance = exports.insertSession = exports.triggerFacultyNotification = exports.saveFacultyToken = exports.createFacultyGatePass = void 0;
 const services_1 = require("../services");
 const cloudinary_1 = require("../utils/cloudinary");
-// import supabase from "../config/supabase";
 const supabase_1 = require("../config/supabase");
+const gatePassResponse_1 = require("./helpers/gatePassResponse");
 const createFacultyGatePass = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e, _f, _g;
-    try {
-        const teacherErpId = (_a = req.authUser) === null || _a === void 0 ? void 0 : _a.erpId;
-        const teacherName = (_b = req.authUser) === null || _b === void 0 ? void 0 : _b.name;
-        console.log("[faculty/gate-pass/create] request received", {
-            teacherErpId,
-            teacherName,
-            role: (_c = req.authUser) === null || _c === void 0 ? void 0 : _c.role,
-            parent_name: (_d = req.body) === null || _d === void 0 ? void 0 : _d.parent_name,
-            visit_date: (_e = req.body) === null || _e === void 0 ? void 0 : _e.visit_date,
-            visit_time: (_f = req.body) === null || _f === void 0 ? void 0 : _f.visit_time,
-        });
-        if (!teacherErpId || !teacherName) {
-            res.status(400).json({ error: "Authenticated faculty context is missing." });
-            return;
-        }
-        const record = yield services_1.FacultyService.createGatePass(teacherErpId, teacherName, req.body);
-        console.log("[faculty/gate-pass/create] success", {
-            id: record.id,
-            teacherErpId,
-            parent_name: record.parent_name,
-        });
-        res.status(201).json({
-            success: true,
-            gatePass: record,
-            qrPayload: JSON.stringify({ gate_pass_id: record.id }),
-        });
-    }
-    catch (error) {
-        console.error("[faculty/gate-pass/create] failed", {
-            teacherErpId: (_g = req.authUser) === null || _g === void 0 ? void 0 : _g.erpId,
-            error: error.message,
-        });
-        res.status(500).json({ error: error.message });
-    }
+    return (0, gatePassResponse_1.createGatePassForAuthenticatedFaculty)(req, res, "[faculty/gate-pass/create]");
 });
 exports.createFacultyGatePass = createFacultyGatePass;
 const saveFacultyToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -99,10 +65,12 @@ const insertSession = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     try {
         const _a = req.body, { images } = _a, payload = __rest(_a, ["images"]);
         const files = req.files;
+        console.log(payload);
         const facultyErpid = req.authUser.erpId;
         // Create session and get the generated session ID
         const sessionID = yield services_1.FacultyService.sessionStart(payload, facultyErpid);
         console.log("this is sessionID", sessionID);
+        yield services_1.FacultyService.initializeAttendance(sessionID, payload);
         const folderName = `session_no_${sessionID}`;
         let uploadedImages = [];
         if (files && files.length > 0) {
@@ -137,7 +105,6 @@ const insertSession = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.insertSession = insertSession;
-//added 
 const getTeacherAttendance = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { teacherId } = req.params;
@@ -193,13 +160,6 @@ const getTeacherAttendance = (req, res) => __awaiter(void 0, void 0, void 0, fun
             });
             return;
         }
-        // Attach attendance to each session
-        // const result = sessions.map((session) => ({
-        //   ...session,
-        //   attendance: attendance.filter(
-        //     (record) => record.session_id === session.id
-        //   ),
-        // }));
         const result = sessions.map((session) => {
             const sessionAttendance = attendance.filter((record) => record.session_id === session.id);
             const presentCount = sessionAttendance.filter((record) => record.status === "Present").length;
@@ -301,3 +261,16 @@ const updateAttendance = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.updateAttendance = updateAttendance;
+const getDropdownData = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const data = yield services_1.FacultyService.getDropdownData();
+        return res.status(200).json(data);
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: error instanceof Error ? error.message : "Internal Server Error",
+        });
+    }
+});
+exports.getDropdownData = getDropdownData;

@@ -23,7 +23,7 @@ export const SUBJECT_OPTIONS = [
 ] as const;
 
 export const SECTION_OPTIONS = [
-  { label: "Section A", division: "A", divisionId: "comp-2-a" },
+  { label: "Section F", division: "F", divisionId: "5" },
   { label: "Section B", division: "B", divisionId: "B" },
   { label: "Section C", division: "C", divisionId: "C" },
   { label: "Section D", division: "D", divisionId: "D" },

@@ -10,6 +10,7 @@ const multerConfig_1 = __importDefault(require("../config/multerConfig"));
 const router = (0, express_1.Router)();
 console.log("facultyRoutes loaded");
 router.post("/gate-pass", authMiddleware_1.authenticateRequest, (0, authMiddleware_1.authorizeRoles)("faculty"), facultyController_1.createFacultyGatePass);
+router.get("/dropdown-data", authMiddleware_1.authenticateRequest, (0, authMiddleware_1.authorizeRoles)("faculty"), facultyController_1.getDropdownData);
 router.post("/save-token", authMiddleware_1.authenticateRequest, (0, authMiddleware_1.authorizeRoles)("faculty"), facultyController_1.saveFacultyToken);
 router.post("/trigger-notification", authMiddleware_1.authenticateRequest, (0, authMiddleware_1.authorizeRoles)("faculty"), facultyController_1.triggerFacultyNotification);
 router.post("/insert-session", authMiddleware_1.authenticateRequest, multerConfig_1.default.array("images"), (0, authMiddleware_1.authorizeRoles)("faculty"), facultyController_1.insertSession);

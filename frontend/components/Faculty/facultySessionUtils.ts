@@ -1,8 +1,6 @@
 import {
   DEPARTMENT_OPTIONS,
-  SECTION_OPTIONS,
   SEMESTER_OPTIONS,
-  SUBJECT_OPTIONS,
   YEAR_OPTIONS,
 } from "./facultySessionConfig";
 
@@ -45,19 +43,34 @@ export const validateSessionForm = (state: SessionFormState): string | null => {
   return null;
 };
 
-const requireOption = <T extends { label: string }>(options: readonly T[], label: string): T => {
-  const option = options.find(item => item.label === label);
+const requireOption = <T extends { label: string }>(
+  options: readonly T[],
+  label: string
+): T => {
+  console.log("Searching for:", label);
+  console.log(
+    "Available labels:",
+    options.map((o) => o.label)
+  );
+
+  const option = options.find((item) => item.label === label);
+
   if (!option) {
     throw new Error(`Unknown option selected: ${label}`);
   }
+
   return option;
 };
 
-export const buildSessionPayload = (state: SessionFormState) => {
+export const buildSessionPayload = (
+  state: SessionFormState,
+  subjects: any[],
+  sections: any[]
+) => {
   const year = requireOption(YEAR_OPTIONS, state.selectedYear);
   const department = requireOption(DEPARTMENT_OPTIONS, state.selectedDepartment);
-  const subject = requireOption(SUBJECT_OPTIONS, state.selectedSubject);
-  const section = requireOption(SECTION_OPTIONS, state.selectedSection);
+  const subject = requireOption(subjects, state.selectedSubject);
+  const section = requireOption(sections, state.selectedSection);
   const semester = requireOption(
     SEMESTER_OPTIONS[state.selectedYear] ?? [],
     state.selectedSemester,

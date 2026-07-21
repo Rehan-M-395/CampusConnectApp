@@ -11,43 +11,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.markGatePassOut = exports.markGatePassIn = exports.scanGatePass = exports.listGuardHistory = exports.listGatePasses = exports.createGatePass = void 0;
 const services_1 = require("../services");
+const gatePassResponse_1 = require("./helpers/gatePassResponse");
 const createGatePass = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e, _f, _g;
-    try {
-        const teacherErpId = (_a = req.authUser) === null || _a === void 0 ? void 0 : _a.erpId;
-        const teacherName = (_b = req.authUser) === null || _b === void 0 ? void 0 : _b.name;
-        console.log("[gate-pass/create] request received", {
-            teacherErpId,
-            teacherName,
-            role: (_c = req.authUser) === null || _c === void 0 ? void 0 : _c.role,
-            parent_name: (_d = req.body) === null || _d === void 0 ? void 0 : _d.parent_name,
-            visit_date: (_e = req.body) === null || _e === void 0 ? void 0 : _e.visit_date,
-            visit_time: (_f = req.body) === null || _f === void 0 ? void 0 : _f.visit_time,
-        });
-        if (!teacherErpId || !teacherName) {
-            console.log("[gate-pass/create] missing authenticated faculty context");
-            res.status(400).json({ error: "Authenticated faculty context is missing." });
-            return;
-        }
-        const record = yield services_1.GatePassService.createGatePass(teacherErpId, teacherName, req.body);
-        console.log("[gate-pass/create] success", {
-            id: record.id,
-            teacherErpId,
-            parent_name: record.parent_name,
-        });
-        res.status(201).json({
-            success: true,
-            gatePass: record,
-            qrPayload: JSON.stringify({ gate_pass_id: record.id }),
-        });
-    }
-    catch (error) {
-        console.error("[gate-pass/create] failed", {
-            teacherErpId: (_g = req.authUser) === null || _g === void 0 ? void 0 : _g.erpId,
-            error: error.message,
-        });
-        res.status(500).json({ error: error.message });
-    }
+    return (0, gatePassResponse_1.createGatePassForAuthenticatedFaculty)(req, res, "[gate-pass/create]");
 });
 exports.createGatePass = createGatePass;
 const listGatePasses = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

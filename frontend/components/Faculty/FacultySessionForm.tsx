@@ -2,6 +2,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
+import { useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -17,9 +18,7 @@ import {
 import { API_BASE_URL } from "../../constants/env";
 import {
   DEPARTMENT_OPTIONS,
-  SECTION_OPTIONS,
   SEMESTER_OPTIONS,
-  SUBJECT_OPTIONS,
   YEAR_OPTIONS,
 } from "./facultySessionConfig";
 import {
@@ -122,11 +121,38 @@ export default function FacultySessionForm({ token }: Props) {
   const [form, setForm] = useState(getDefaultSessionFormState());
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [photos, setPhotos] = useState<PhotoState>(initialPhotoState);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [sections, setSections] = useState<any[]>([]);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isLocationFocused, setIsLocationFocused] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchDropdownData();
+  }, []);
+
+  const fetchDropdownData = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/faculty/dropdown-data`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+      console.log("frontend response",data);
+
+      setSubjects(data.subjects);
+      setSections(data.sections);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const resetForm = () => {
     setForm(getDefaultSessionFormState());
@@ -214,7 +240,18 @@ export default function FacultySessionForm({ token }: Props) {
 
     try {
       setLoading(true);
-      const payload = buildSessionPayload(form);
+      console.log("========== FORM ==========");
+      console.log(form);
+
+      console.log("========== SUBJECTS ==========");
+      console.log(subjects);
+
+      console.log("========== SECTIONS ==========");
+      console.log(sections);
+      const payload = buildSessionPayload(form,subjects,sections);
+      console.log("========== PAYLOAD ==========");
+      console.log(payload);
+
       const formData = new FormData();
 
       Object.entries(payload).forEach(([key, value]) => {
@@ -274,7 +311,7 @@ export default function FacultySessionForm({ token }: Props) {
           <Dropdown
             id="subject"
             label="Select Subject"
-            options={SUBJECT_OPTIONS.map(option => option.label)}
+            options={subjects.map(option => option.label)}
             selectedValue={form.selectedSubject}
             onSelect={value => updateForm("selectedSubject", value)}
             openId={openDropdownId}
@@ -329,7 +366,7 @@ export default function FacultySessionForm({ token }: Props) {
               <Dropdown
                 id="section"
                 label="Select Section"
-                options={SECTION_OPTIONS.map(option => option.label)}
+                options={sections.map(option => option.label)}
                 selectedValue={form.selectedSection}
                 onSelect={value => updateForm("selectedSection", value)}
                 openId={openDropdownId}
