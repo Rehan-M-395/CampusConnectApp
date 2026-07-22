@@ -7,10 +7,11 @@ import {
 type AttendanceSummaryRow = {
   subject_id: number;
   total_sessions: number;
-  attended_sessions: number;
+ attended_sessions: number;
   subjects: {
+    id: number;
     name: string;
-  }[];
+  } | null;
 };
 
 export class StudentAttendanceService {
@@ -20,35 +21,45 @@ export class StudentAttendanceService {
 
     console.log("ERP ID =", erpId);
 
-    const { data, error } = await supabase
-      .from("attendance_summary")
-      .select("*")
-      .eq("student_erpid", erpId);
+    console.log("Fetching attendance...");
 
-      console.log("Error =", error);
-      console.log("Data =", data);
+    const { data, error } = await supabase
+  .from("attendance_summary")
+  .select(`
+    subject_id,
+    total_sessions,
+    attended_sessions,
+    subjects (
+      id,
+      name
+    )
+  `)
+  .eq("student_erpid", erpId);
+
+console.log("ERROR:", error);
+console.log("DATA:", JSON.stringify(data, null, 2));
 
     if (error) {
       throw new Error(error.message);
     }
 
     const rows: AttendanceSummaryRow[] = (data ?? []).map((row: any) => ({
-        subject_id: row.subject_id,
-        total_sessions: row.total_sessions,
-        attended_sessions: row.attended_sessions,
-        subjects: Array.isArray(row.subjects) ? row.subjects : [],
-    }));
+  subject_id: row.subject_id,
+  total_sessions: row.total_sessions,
+  attended_sessions: row.attended_sessions,
+  subjects: row.subjects,
+}));
 
     const subjects: SubjectAttendance[] = rows.map((row) => ({
-      subjectId: row.subject_id,
-      subjectName: row.subjects[0]?.name ?? "Unknown Subject",
-      attended: row.attended_sessions,
-      total: row.total_sessions,
-      percentage:
-        row.total_sessions === 0
-          ? 0
-          : Math.round((row.attended_sessions * 100) / row.total_sessions),
-    }));
+  subjectId: row.subject_id,
+  subjectName: row.subjects?.name ?? "Unknown Subject",
+  attended: row.attended_sessions,
+  total: row.total_sessions,
+  percentage:
+    row.total_sessions === 0
+      ? 0
+      : Math.round((row.attended_sessions * 100) / row.total_sessions),
+}));
 
     const totalAttended = subjects.reduce(
       (sum, subject) => sum + subject.attended,
