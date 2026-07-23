@@ -91,7 +91,9 @@ export default function StaffTab() {
   const totalPresent = data?.today.present ?? 0;
   const totalAbsent = data?.today.absent ?? 0;
   const attendancePercentage = data?.today.percentage ?? 0;
-  const history = data?.history ?? [];
+  const history = [...(data?.history ?? [])].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
 
   return (
     <ScrollView

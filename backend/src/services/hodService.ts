@@ -68,20 +68,22 @@ class HodService {
 
     if (error) throw new Error(error.message);
 
-    const history: AttendanceHistoryDay[] = dates.map((date) => {
-      const presentSet = new Set(
-        (data ?? [])
-          .filter((row) => row.session_date === date && row.status === "Present")
-          .map((row) => row.student_erpid),
-      );
-      const present = presentSet.size;
-      return {
-        date,
-        present,
-        total: totalStudents,
-        percentage: toPercentage(present, totalStudents),
-      };
-    });
+    const history: AttendanceHistoryDay[] = [...dates]
+      .reverse()
+      .map((date) => {
+        const presentSet = new Set(
+          (data ?? [])
+            .filter((row) => row.session_date === date && row.status === "Present")
+            .map((row) => row.student_erpid),
+        );
+        const present = presentSet.size;
+        return {
+          date,
+          present,
+          total: totalStudents,
+          percentage: toPercentage(present, totalStudents),
+        };
+      });
 
     const todaySummary =
       history.find((h) => h.date === today) ?? { date: today, present: 0, total: totalStudents, percentage: 0 };
@@ -151,20 +153,22 @@ class HodService {
 
     if (error) throw new Error(error.message);
 
-    const history: AttendanceHistoryDay[] = dates.map((date) => {
-      const presentSet = new Set(
-        (data ?? [])
-          .filter((row) => row.date === date && row.login_time !== null)
-          .map((row) => row.erpid),
-      );
-      const present = presentSet.size;
-      return {
-        date,
-        present,
-        total: totalStaff,
-        percentage: toPercentage(present, totalStaff),
-      };
-    });
+    const history: AttendanceHistoryDay[] = [...dates]
+      .reverse()
+      .map((date) => {
+        const presentSet = new Set(
+          (data ?? [])
+            .filter((row) => row.date === date && row.login_time !== null)
+            .map((row) => row.erpid),
+        );
+        const present = presentSet.size;
+        return {
+          date,
+          present,
+          total: totalStaff,
+          percentage: toPercentage(present, totalStaff),
+        };
+      });
 
     const todaySummary =
       history.find((h) => h.date === today) ?? { date: today, present: 0, total: totalStaff, percentage: 0 };

@@ -70,10 +70,14 @@ export default function HODDashboard() {
   const inDisplay = loading ? '--:--' : formatTime(dashboardData?.loginTime);
   const outDisplay = loading ? '--:--' : formatTime(dashboardData?.logoutTime);
 
-  const activeHistory: AttendanceHistoryDay[] =
+  const rawHistory: AttendanceHistoryDay[] =
     graphMode === 'student'
       ? dashboardData?.studentHistory ?? []
       : dashboardData?.staffHistory ?? [];
+
+  const activeHistory = [...rawHistory].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
 
   const formatShortDate = (dateStr: string) => {
     if (!dateStr) return '';
@@ -443,7 +447,7 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     textAlign: 'center',
     alignSelf: 'center',
-    marginAuto: 'auto',
+    margin: 'auto',
   },
   barsRow: {
     flexDirection: 'row',
