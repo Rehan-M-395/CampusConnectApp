@@ -60,7 +60,7 @@ export const getHodStaffAttendance = async (req: Request, res: Response): Promis
     const ctx = requireDeptContext(req, res);
     if (!ctx) return;
 
-    const data = await HodService.getStaffAttendance(ctx.departmentName, ctx.departmentShortCode);
+    const data = await HodService.getStaffAttendance(ctx.departmentId, ctx.departmentName, ctx.departmentShortCode);
     res.status(200).json({ success: true, ...data });
   } catch (error) {
     console.error("[hod/staff] failed", error);

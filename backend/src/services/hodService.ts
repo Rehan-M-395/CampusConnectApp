@@ -97,22 +97,40 @@ class HodService {
     };
   }
 
-  static async getStaffErpIds(departmentName: string, departmentShortCode?: string): Promise<string[]> {
-    const { data, error } = await supabase
+  static async getStaffErpIds(
+    departmentId: number,
+    departmentName: string,
+    departmentShortCode?: string,
+  ): Promise<string[]> {
+    const erpSet = new Set<string>();
+
+    // 1. Query faculty table by department_id
+    const { data: facultyData } = await supabase
+      .from("faculty")
+      .select("erpid")
+      .eq("department_id", departmentId)
+      .eq("is_active", true);
+
+    (facultyData ?? []).forEach((row) => row.erpid && erpSet.add(row.erpid));
+
+    // 2. Query users table by department name / shortcode
+    const { data: userData } = await supabase
       .from("users")
-      .select("erpid, role")
+      .select("erpid")
       .ilike("role", "faculty")
       .or(buildDeptOrFilter(departmentName, departmentShortCode));
 
-    if (error) throw new Error(error.message);
-    return (data ?? []).map((row) => row.erpid as string);
+    (userData ?? []).forEach((row) => row.erpid && erpSet.add(row.erpid));
+
+    return Array.from(erpSet);
   }
 
   static async getStaffAttendance(
+    departmentId: number,
     departmentName: string,
     departmentShortCode?: string,
   ): Promise<HodAttendanceResponse> {
-    const erpIds = await this.getStaffErpIds(departmentName, departmentShortCode);
+    const erpIds = await this.getStaffErpIds(departmentId, departmentName, departmentShortCode);
     const totalStaff = erpIds.length;
     const dates = getLastNDatesIst(HISTORY_DAYS);
     const today = getTodayIst();
@@ -217,7 +235,7 @@ class HodService {
   ): Promise<HodDashboardResponse> {
     const [studentAttendance, staffAttendance, hodLogs] = await Promise.all([
       this.getStudentAttendance(departmentId),
-      this.getStaffAttendance(departmentName, departmentShortCode),
+      this.getStaffAttendance(departmentId, departmentName, departmentShortCode),
       hodErpId ? this.getHodTodayLogs(hodErpId) : Promise.resolve({ loginTime: null, logoutTime: null }),
     ]);
 

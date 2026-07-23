@@ -1,6 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
+import { useAuth } from '@/context/AuthContext';
+import { getHodStaffAttendance, HodAttendanceData } from '@/services/hodService';
 
 type DonutChartProps = {
   percentage: number;
@@ -8,7 +10,6 @@ type DonutChartProps = {
   radius?: number;
   strokeWidth?: number;
 };
-
 
 // Pie chart
 const DonutChart = ({ percentage, color, radius = 60, strokeWidth = 15 }: DonutChartProps) => {
@@ -51,33 +52,63 @@ const DonutChart = ({ percentage, color, radius = 60, strokeWidth = 15 }: DonutC
 };
 
 export default function StaffTab() {
-  // Mock data for staff attendancef
-  const totalStaff = 80;
-  const totalPresent = 74;
-  const attendancePercentage = Math.round((totalPresent / totalStaff) * 100);
+  const { session, apiBaseUrl } = useAuth();
+  const [data, setData] = useState<HodAttendanceData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const history = [
-    { id: '1', date: '09 Jul 2026', present: 74, total: 80 },
-    { id: '2', date: '08 Jul 2026', present: 75, total: 80 },
-    { id: '3', date: '07 Jul 2026', present: 70, total: 80 },
-    { id: '4', date: '06 Jul 2026', present: 78, total: 80 },
-    { id: '5', date: '05 Jul 2026', present: 76, total: 80 },
-  ];
+  const fetchAttendance = useCallback(
+    async (isRefresh = false) => {
+      if (!session?.token) return;
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
+
+      try {
+        const res = await getHodStaffAttendance(apiBaseUrl, session.token);
+        setData(res);
+      } catch (error) {
+        console.error('[StaffTab] fetch error:', error);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [apiBaseUrl, session?.token]
+  );
+
+  useEffect(() => {
+    fetchAttendance();
+  }, [fetchAttendance]);
+
+  const totalPresent = data?.today.present ?? 0;
+  const totalAbsent = data?.today.absent ?? 0;
+  const attendancePercentage = data?.today.percentage ?? 0;
+  const history = data?.history ?? [];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => fetchAttendance(true)}
+          tintColor="#ae2525"
+        />
+      }
+    >
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Today's Attendance</Text>
-        <DonutChart percentage={attendancePercentage} color="#ae2525" />
+        <Text style={styles.sectionTitle}>Today's Staff Attendance</Text>
+        <DonutChart percentage={loading ? 0 : attendancePercentage} color="#ae2525" />
 
         <View style={styles.statsRow}>
           <View style={styles.statBox}>
-            <Text style={styles.statValue}>{totalPresent}</Text>
+            <Text style={styles.statValue}>{loading ? '--' : totalPresent}</Text>
             <Text style={styles.statLabel}>Present</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statBox}>
-            <Text style={styles.statValue}>{totalStaff - totalPresent}</Text>
+            <Text style={styles.statValue}>{loading ? '--' : totalAbsent}</Text>
             <Text style={styles.statLabel}>Absent</Text>
           </View>
         </View>
@@ -86,15 +117,19 @@ export default function StaffTab() {
       {/* History List */}
       <Text style={styles.historyTitle}>Attendance History</Text>
       <View style={styles.historyCard}>
-        {history.map((item, index) => (
-          <View key={item.id} style={[styles.historyRow, index === history.length - 1 && styles.noBorder]}>
-            <Text style={styles.historyDate}>{item.date}</Text>
-            <View style={styles.historyDetails}>
-              <Text style={styles.historyPresent}>{item.present} / {item.total}</Text>
-              <Text style={styles.historyPercent}>{Math.round((item.present / item.total) * 100)}%</Text>
+        {history.length === 0 ? (
+          <Text style={styles.noDataText}>No history records found</Text>
+        ) : (
+          history.map((item, index) => (
+            <View key={item.date} style={[styles.historyRow, index === history.length - 1 && styles.noBorder]}>
+              <Text style={styles.historyDate}>{item.date}</Text>
+              <View style={styles.historyDetails}>
+                <Text style={styles.historyPresent}>{item.present} / {item.total}</Text>
+                <Text style={styles.historyPercent}>{item.percentage}%</Text>
+              </View>
             </View>
-          </View>
-        ))}
+          ))
+        )}
       </View>
     </ScrollView>
   );
@@ -219,5 +254,11 @@ const styles = StyleSheet.create({
     color: '#e09c15', // Matches the gold staff theme color
     fontWeight: '700',
     marginTop: 2,
+  },
+  noDataText: {
+    fontSize: 14,
+    color: '#94a3b8',
+    textAlign: 'center',
+    paddingVertical: 12,
   },
 });
