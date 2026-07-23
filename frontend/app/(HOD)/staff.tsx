@@ -9,6 +9,7 @@ type DonutChartProps = {
   strokeWidth?: number;
 };
 
+
 // Pie chart
 const DonutChart = ({ percentage, color, radius = 60, strokeWidth = 15 }: DonutChartProps) => {
   const halfCircle = radius + strokeWidth;

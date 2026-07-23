@@ -55,20 +55,6 @@ function CustomDrawerContent(props: any) {
           </Text>
         </TouchableOpacity>
 
-        {/*Non teaching Staff Link*/}
-        <TouchableOpacity
-          style={[styles.drawerItem, activeRouteName === 'non_teaching_staff' && styles.drawerItemActive]}
-          onPress={() => props.navigation.navigate('non_teaching_staff')}>
-          <Ionicons
-            name = "laptop-outline"
-            size={22}
-            color={activeRouteName === 'non_teaching_staff' ? '#cb4f36' : '#475569'}
-          />
-          <Text style={[styles.drawerItemText, activeRouteName === 'non_teaching_staff' && styles.drawerItemTextActive]}>
-            Non Teaching Staff
-          </Text>
-        </TouchableOpacity>
-
         {/* Students Link */}
         <TouchableOpacity
           style={[styles.drawerItem, activeRouteName === 'students' && styles.drawerItemActive]}
@@ -130,12 +116,6 @@ export default function HODLayout() {
         name="staff"
         options={{
           title: 'Staff',
-        }}
-      />
-      <Drawer.Screen
-        name="non_teaching_staff"
-        options={{
-          title: 'Non Teaching Staff',
         }}
       />
       <Drawer.Screen

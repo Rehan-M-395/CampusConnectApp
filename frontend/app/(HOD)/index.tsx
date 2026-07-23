@@ -2,10 +2,16 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
+import { Redirect } from 'expo-router';
 
 export default function HODDashboard() {
   const {session} = useAuth();
   const hodName = session?.user?.name ?? 'HOD';
+
+  if (!session) {
+      return <Redirect href="/login" />;
+    }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.heroCard}>
