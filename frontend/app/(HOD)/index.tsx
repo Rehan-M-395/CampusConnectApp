@@ -17,10 +17,8 @@ export default function HODDashboard() {
       <View style={styles.heroCard}>
         <View style={styles.heroBody}>
           <View>
-            <Text style = {styles.herowlc}>Welcome, {hodName} </Text>
-            <Text style={styles.heroPercentage}>
-              -- <Text style={styles.percentSign}> %</Text>
-            </Text>
+            <Text style = {styles.herowlc}>Welcome</Text>
+            <Text style = {styles.Hodname}>{hodName}</Text>
             <Text style={styles.heroSubtext}>Your Attendance</Text>
           </View>
         </View>
@@ -82,9 +80,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   herowlc: {
-    fontSize: 26,
+    fontSize: 22,
     fontFamily: 'Instrument Sans',
-    fontWeight: '400',
+    fontWeight: '300',
     color: '#f0ebe2',
   },
   heroBody: {
@@ -93,15 +91,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginTop: 8,
   },
-  heroPercentage: {
-    fontSize: 42,
-    fontWeight: '800',
-    color: '#ffffff',
-  },
-  percentSign: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#e09c15',
+  Hodname :{
+    color: '#f8fafc',
+    fontSize: 19,
+    marginTop: 3,
+    marginBottom: 4,
   },
   heroSubtext: {
     color: '#f8fafc',
