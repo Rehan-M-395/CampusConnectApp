@@ -22,7 +22,13 @@ export const getHodDashboard = async (req: Request, res: Response): Promise<void
     const ctx = requireDeptContext(req, res);
     if (!ctx) return;
 
-    const dashboard = await HodService.getDashboard(ctx.departmentId, ctx.departmentName, ctx.departmentShortCode);
+    const erpId = req.authUser?.erpId;
+    const dashboard = await HodService.getDashboard(
+      ctx.departmentId,
+      ctx.departmentName,
+      ctx.departmentShortCode,
+      erpId
+    );
     res.status(200).json({ success: true, ...dashboard });
   } catch (error) {
     console.error("[hod/dashboard] failed", error);

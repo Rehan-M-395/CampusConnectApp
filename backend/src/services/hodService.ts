@@ -162,23 +162,70 @@ class HodService {
     };
   }
 
+  static async getHodTodayLogs(
+    hodErpId: string
+  ): Promise<{ loginTime: string | null; logoutTime: string | null }> {
+    if (!hodErpId) return { loginTime: null, logoutTime: null };
+    const today = getTodayIst();
+    const { data, error } = await supabase
+      .from("attendance_logs")
+      .select("login_time, logout_time, final_logout_time")
+      .ilike("erpid", hodErpId)
+      .eq("date", today)
+      .order("login_time", { ascending: false, nullsFirst: false })
+      .limit(1);
+
+    if (!error && data && data.length > 0) {
+      const row = data[0];
+      const logout = row.final_logout_time ?? row.logout_time ?? null;
+      return {
+        loginTime: row.login_time ?? null,
+        logoutTime: logout,
+      };
+    }
+
+    if (error) console.error("[hod/getHodTodayLogs] today query error:", error);
+
+    // Fallback: Fetch most recent log if no log exists for today
+    const { data: latestData, error: latestError } = await supabase
+      .from("attendance_logs")
+      .select("login_time, logout_time, final_logout_time")
+      .ilike("erpid", hodErpId)
+      .order("date", { ascending: false })
+      .order("login_time", { ascending: false, nullsFirst: false })
+      .limit(1);
+
+    if (latestError) console.error("[hod/getHodTodayLogs] latest query error:", latestError);
+
+    if (latestData && latestData.length > 0) {
+      const row = latestData[0];
+      const logout = row.final_logout_time ?? row.logout_time ?? null;
+      return {
+        loginTime: row.login_time ?? null,
+        logoutTime: logout,
+      };
+    }
+
+    return { loginTime: null, logoutTime: null };
+  }
+
   static async getDashboard(
     departmentId: number,
     departmentName: string,
     departmentShortCode?: string,
+    hodErpId?: string,
   ): Promise<HodDashboardResponse> {
-    const [studentAttendance, staffAttendance] = await Promise.all([
+    const [studentAttendance, staffAttendance, hodLogs] = await Promise.all([
       this.getStudentAttendance(departmentId),
       this.getStaffAttendance(departmentName, departmentShortCode),
+      hodErpId ? this.getHodTodayLogs(hodErpId) : Promise.resolve({ loginTime: null, logoutTime: null }),
     ]);
-
-    const combinedTotal = studentAttendance.today.total + staffAttendance.today.total;
-    const combinedPresent = studentAttendance.today.present + staffAttendance.today.present;
 
     return {
       departmentId,
       departmentName,
-      overallPercentage: toPercentage(combinedPresent, combinedTotal),
+      loginTime: hodLogs.loginTime,
+      logoutTime: hodLogs.logoutTime,
       students: studentAttendance.today,
       staff: staffAttendance.today,
     };

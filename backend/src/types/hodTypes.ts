@@ -15,7 +15,8 @@ export interface AttendanceHistoryDay {
 export interface HodDashboardResponse {
   departmentId: number;
   departmentName: string;
-  overallPercentage: number;
+  loginTime: string | null;
+  logoutTime: string | null;
   students: AttendanceSummary;
   staff: AttendanceSummary;
 }
