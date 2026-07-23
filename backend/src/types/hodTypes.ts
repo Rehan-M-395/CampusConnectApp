@@ -19,6 +19,8 @@ export interface HodDashboardResponse {
   logoutTime: string | null;
   students: AttendanceSummary;
   staff: AttendanceSummary;
+  studentHistory: AttendanceHistoryDay[];
+  staffHistory: AttendanceHistoryDay[];
 }
 
 export interface HodAttendanceResponse {

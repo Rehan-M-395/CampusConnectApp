@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { Redirect } from 'expo-router';
-import { getHodDashboard, HodDashboardData } from '@/services/hodService';
+import { getHodDashboard, HodDashboardData, AttendanceHistoryDay } from '@/services/hodService';
 
 export default function HODDashboard() {
   const { session, apiBaseUrl } = useAuth();
@@ -11,6 +11,7 @@ export default function HODDashboard() {
   const [dashboardData, setDashboardData] = useState<HodDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [graphMode, setGraphMode] = useState<'student' | 'staff'>('student');
 
   const fetchDashboard = useCallback(
     async (isRefresh = false) => {
@@ -42,13 +43,11 @@ export default function HODDashboard() {
   const formatTime = (rawTime?: string | null) => {
     if (!rawTime) return '--:--';
 
-    // 1. Try parsing full ISO timestamp
     const d = new Date(rawTime);
     if (!isNaN(d.getTime())) {
       return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
     }
 
-    // 2. Try parsing "HH:MM:SS" or "HH:MM"
     const timeMatch = rawTime.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
     if (timeMatch) {
       let hours = parseInt(timeMatch[1], 10);
@@ -71,6 +70,20 @@ export default function HODDashboard() {
   const inDisplay = loading ? '--:--' : formatTime(dashboardData?.loginTime);
   const outDisplay = loading ? '--:--' : formatTime(dashboardData?.logoutTime);
 
+  const activeHistory: AttendanceHistoryDay[] =
+    graphMode === 'student'
+      ? dashboardData?.studentHistory ?? []
+      : dashboardData?.staffHistory ?? [];
+
+  const formatShortDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      return `${d.getDate()}/${d.getMonth() + 1}`;
+    }
+    return dateStr.length > 5 ? dateStr.slice(-5) : dateStr;
+  };
+
   return (
     <ScrollView
       style={styles.container}
@@ -83,6 +96,7 @@ export default function HODDashboard() {
         />
       }
     >
+      {/* Hero Card */}
       <View style={styles.heroCard}>
         <View style={styles.heroHeader}>
           <View>
@@ -137,7 +151,7 @@ export default function HODDashboard() {
             <Text style={styles.cardSubtext}>
               {loading
                 ? '-- Students present  -- Students absent'
-                : `${dashboardData?.students.present ?? 0} Students present   ${dashboardData?.students.absent ?? 0} Students absent`}
+                : `${dashboardData?.students.present ?? 0} Present   ${dashboardData?.students.absent ?? 0} Absent`}
             </Text>
           </View>
         </View>
@@ -157,9 +171,63 @@ export default function HODDashboard() {
             <Text style={styles.cardSubtext}>
               {loading
                 ? '-- Staff present   -- Staff absent'
-                : `${dashboardData?.staff.present ?? 0} Staff present   ${dashboardData?.staff.absent ?? 0} Staff absent`}
+                : `${dashboardData?.staff.present ?? 0} Present   ${dashboardData?.staff.absent ?? 0} Absent`}
             </Text>
           </View>
+        </View>
+      </View>
+
+      {/* 7 Days Attendance Bar Graph Section */}
+      <View style={styles.graphCard}>
+        <View style={styles.graphHeader}>
+          <View style={styles.graphTitleWrapper}>
+            <Ionicons name="stats-chart-outline" size={18} color="#ae2525" />
+            <Text style={styles.graphTitle}>Past 7 Days Attendance</Text>
+          </View>
+
+          {/* Segmented Selector for Student / Staff */}
+          <View style={styles.segmentContainer}>
+            <Pressable
+              style={[styles.segmentBtn, graphMode === 'student' && styles.segmentBtnActive]}
+              onPress={() => setGraphMode('student')}
+            >
+              <Text style={[styles.segmentText, graphMode === 'student' && styles.segmentTextActive]}>
+                Student
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.segmentBtn, graphMode === 'staff' && styles.segmentBtnActive]}
+              onPress={() => setGraphMode('staff')}
+            >
+              <Text style={[styles.segmentText, graphMode === 'staff' && styles.segmentTextActive]}>
+                Staff
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Bar Chart Container */}
+        <View style={styles.chartArea}>
+          {loading ? (
+            <Text style={styles.chartLoadingText}>Loading graph...</Text>
+          ) : activeHistory.length === 0 ? (
+            <Text style={styles.chartLoadingText}>No 7-day attendance records</Text>
+          ) : (
+            <View style={styles.barsRow}>
+              {activeHistory.map((item) => {
+                const heightPct = Math.max(item.percentage, 4); // Minimum bar height for visibility
+                return (
+                  <View key={item.date} style={styles.barCol}>
+                    <Text style={styles.barValText}>{item.percentage}%</Text>
+                    <View style={styles.barTrack}>
+                      <View style={[styles.barFill, { height: `${heightPct}%` }]} />
+                    </View>
+                    <Text style={styles.barLabel}>{formatShortDate(item.date)}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </View>
       </View>
     </ScrollView>
@@ -179,7 +247,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ae2525',
     borderRadius: 16,
     padding: 20,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   heroHeader: {
     flexDirection: 'row',
@@ -259,7 +327,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   summaryCard: {
     flex: 1,
@@ -311,5 +379,108 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748b',
     marginTop: 4,
+  },
+  graphCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+    marginBottom: 20,
+  },
+  graphHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  graphTitleWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  graphTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  segmentContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 10,
+    padding: 3,
+  },
+  segmentBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  segmentBtnActive: {
+    backgroundColor: '#ae2525',
+  },
+  segmentText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  segmentTextActive: {
+    color: '#ffffff',
+  },
+  chartArea: {
+    height: 170,
+    justifyContent: 'flex-end',
+    paddingTop: 10,
+  },
+  chartLoadingText: {
+    fontSize: 13,
+    color: '#94a3b8',
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginAuto: 'auto',
+  },
+  barsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    height: 150,
+  },
+  barCol: {
+    flex: 1,
+    alignItems: 'center',
+    height: '100%',
+    justifyContent: 'flex-end',
+  },
+  barValText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748b',
+    marginBottom: 4,
+  },
+  barTrack: {
+    width: 18,
+    height: 100,
+    backgroundColor: '#f8fafc',
+    borderRadius: 6,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  barFill: {
+    width: '100%',
+    backgroundColor: '#ae2525',
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
+  },
+  barLabel: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#475569',
+    marginTop: 6,
   },
 });

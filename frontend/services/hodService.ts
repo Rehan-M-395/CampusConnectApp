@@ -20,6 +20,8 @@ export interface HodDashboardData {
   logoutTime: string | null;
   students: AttendanceSummary;
   staff: AttendanceSummary;
+  studentHistory?: AttendanceHistoryDay[];
+  staffHistory?: AttendanceHistoryDay[];
 }
 
 export interface HodAttendanceData {

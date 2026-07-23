@@ -6,7 +6,7 @@ import {
   HodDashboardResponse,
 } from "../types/hodTypes";
 
-const HISTORY_DAYS = 5;
+const HISTORY_DAYS = 7;
 
 const getTodayIst = (): string =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
@@ -246,6 +246,8 @@ class HodService {
       logoutTime: hodLogs.logoutTime,
       students: studentAttendance.today,
       staff: staffAttendance.today,
+      studentHistory: studentAttendance.history,
+      staffHistory: staffAttendance.history,
     };
   }
 }
