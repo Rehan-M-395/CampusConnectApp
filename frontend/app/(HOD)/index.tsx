@@ -155,8 +155,8 @@ export default function HODDashboard() {
             </Text>
             <Text style={styles.cardSubtext}>
               {loading
-                ? '-- Students present  -- Students absent'
-                : `${dashboardData?.students.present ?? 0} Present   ${dashboardData?.students.absent ?? 0} Absent`}
+                ? '-- Students present  -- Students absent -- Total'
+                : `${dashboardData?.students.present ?? 0} Present   ${dashboardData?.students.absent ?? 0} Absent   ${dashboardData?.students?.total ?? 0} Total`}
             </Text>
           </View>
         </View>
@@ -175,8 +175,8 @@ export default function HODDashboard() {
             </Text>
             <Text style={styles.cardSubtext}>
               {loading
-                ? '-- Staff present   -- Staff absent'
-                : `${dashboardData?.staff.present ?? 0} Present   ${dashboardData?.staff.absent ?? 0} Absent`}
+                ? '-- Staff present   -- Staff absent  --Total'
+                : `${dashboardData?.staff.present ?? 0} Present   ${dashboardData?.staff.absent ?? 0} Absent   ${dashboardData?.staff?.total ?? 0} Total`}
             </Text>
           </View>
         </View>
