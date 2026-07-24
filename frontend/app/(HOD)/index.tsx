@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
-import { Redirect } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { getHodDashboard, HodDashboardData, AttendanceHistoryDay } from '@/services/hodService';
 
 export default function HODDashboard() {
   const { session, apiBaseUrl } = useAuth();
+  const router = useRouter();
   const hodName = session?.user?.name ?? 'HOD';
   const [dashboardData, setDashboardData] = useState<HodDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -170,7 +171,7 @@ export default function HODDashboard() {
           </View>
           <View style={styles.cardBody}>
             <Text style={styles.cardValue}>
-              {loading ? '--' : `${dashboardData?.staff.present ?? 0} / ${dashboardData?.staff.total ?? 0}`}
+              {loading ? '--' : `${dashboardData?.staff.present ?? 0} / ${dashboardData?.staff.total}`}
             </Text>
             <Text style={styles.cardSubtext}>
               {loading
@@ -180,6 +181,83 @@ export default function HODDashboard() {
           </View>
         </View>
       </View>
+
+      {/* Action Buttons for Detailed Reports */}
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          style={styles.actionBtnPrimary}
+          activeOpacity={0.8}
+          onPress={() => router.push('/(HOD)/students')}
+        >
+          <Ionicons name="people" size={18} color="#ffffff" />
+          <Text style={styles.actionBtnTextPrimary}>Detailed Student Attendance</Text>
+          <Ionicons name="chevron-forward" size={16} color="#ffffff" style={styles.chevronIcon} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionBtnSecondary}
+          activeOpacity={0.8}
+          onPress={() => router.push('/(HOD)/staff')}
+        >
+          <Ionicons name="briefcase" size={18} color="#ae2525" />
+          <Text style={styles.actionBtnTextSecondary}>Detailed Staff Attendance</Text>
+          <Ionicons name="chevron-forward" size={16} color="#ae2525" style={styles.chevronIcon} />
+        </TouchableOpacity>
+      </View>
+
+      {/* 7 Days Attendance Bar Graph Section */}
+      <View style={styles.graphCard}>
+        <View style={styles.graphHeader}>
+          <View style={styles.graphTitleWrapper}>
+            <Ionicons name="stats-chart-outline" size={18} color="#ae2525" />
+            <Text style={styles.graphTitle}>Past 7 Days Attendance</Text>
+          </View>
+
+          {/* Segmented Selector for Student / Staff */}
+          <View style={styles.segmentContainer}>
+            <Pressable
+              style={[styles.segmentBtn, graphMode === 'student' && styles.segmentBtnActive]}
+              onPress={() => setGraphMode('student')}
+            >
+              <Text style={[styles.segmentText, graphMode === 'student' && styles.segmentTextActive]}>
+                Student
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.segmentBtn, graphMode === 'staff' && styles.segmentBtnActive]}
+              onPress={() => setGraphMode('staff')}
+            >
+              <Text style={[styles.segmentText, graphMode === 'staff' && styles.segmentTextActive]}>
+                Staff
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Bar Chart Container */}
+        <View style={styles.chartArea}>
+          {loading ? (
+            <Text style={styles.chartLoadingText}>Loading graph...</Text>
+          ) : activeHistory.length === 0 ? (
+            <Text style={styles.chartLoadingText}>No 7-day attendance records</Text>
+          ) : (
+            <View style={styles.barsRow}>
+              {activeHistory.map((item) => {
+                const heightPct = Math.max(item.percentage, 4);
+                return (
+                  <View key={item.date} style={styles.barCol}>
+                    <Text style={styles.barValText}>{item.percentage}%</Text>
+                    <View style={styles.barTrack}>
+                      <View style={[styles.barFill, { height: `${heightPct}%` }]} />
+                    </View>
+                    <Text style={styles.barLabel}>{formatShortDate(item.date)}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -187,7 +265,7 @@ export default function HODDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6e9d9',
+    backgroundColor: '#fffcf8',
   },
   content: {
     padding: 16,
@@ -329,5 +407,152 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748b',
     marginTop: 4,
+  },
+  actionRow: {
+    gap: 10,
+    marginBottom: 16,
+  },
+  actionBtnPrimary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ae2525',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    elevation: 2,
+    shadowColor: '#ae2525',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+  },
+  actionBtnTextPrimary: {
+    flex: 1,
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '700',
+    marginLeft: 10,
+  },
+  actionBtnSecondary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#ae2525',
+  },
+  actionBtnTextSecondary: {
+    flex: 1,
+    color: '#ae2525',
+    fontSize: 14,
+    fontWeight: '700',
+    marginLeft: 10,
+  },
+  chevronIcon: {
+    marginLeft: 4,
+  },
+  graphCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+    marginBottom: 20,
+  },
+  graphHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  graphTitleWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  graphTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  segmentContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 10,
+    padding: 3,
+  },
+  segmentBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  segmentBtnActive: {
+    backgroundColor: '#ae2525',
+  },
+  segmentText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  segmentTextActive: {
+    color: '#ffffff',
+  },
+  chartArea: {
+    height: 170,
+    justifyContent: 'flex-end',
+    paddingTop: 10,
+  },
+  chartLoadingText: {
+    fontSize: 13,
+    color: '#94a3b8',
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginAuto: 'auto',
+  },
+  barsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    height: 150,
+  },
+  barCol: {
+    flex: 1,
+    alignItems: 'center',
+    height: '100%',
+    justifyContent: 'flex-end',
+  },
+  barValText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748b',
+    marginBottom: 4,
+  },
+  barTrack: {
+    width: 18,
+    height: 100,
+    backgroundColor: '#f8fafc',
+    borderRadius: 6,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  barFill: {
+    width: '100%',
+    backgroundColor: '#ae2525',
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
+  },
+  barLabel: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#475569',
+    marginTop: 6,
   },
 });

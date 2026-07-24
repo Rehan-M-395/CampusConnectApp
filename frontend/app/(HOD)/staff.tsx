@@ -1,68 +1,24 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import Svg, { Circle, G, Defs, LinearGradient, Stop } from 'react-native-svg';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
-import { getHodStaffAttendance, HodAttendanceData } from '@/services/hodService';
-
-type DonutChartProps = {
-  percentage: number;
-  radius?: number;
-  strokeWidth?: number;
-};
-
-// Custom Pie Chart Component using Svg with low-contrast dark red gradient
-const DonutChart = ({ percentage, radius = 65, strokeWidth = 14 }: DonutChartProps) => {
-  const halfCircle = radius + strokeWidth;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (circumference * percentage) / 100;
-
-  return (
-    <View style={styles.chartContainer}>
-      <Svg width={halfCircle * 2} height={halfCircle * 2} viewBox={`0 0 ${halfCircle * 2} ${halfCircle * 2}`}>
-        <Defs>
-          <LinearGradient id="staffRedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#7a1616" stopOpacity="1" />
-            <Stop offset="100%" stopColor="#a82323" stopOpacity="1" />
-          </LinearGradient>
-        </Defs>
-        <G rotation="-90" origin={`${halfCircle}, ${halfCircle}`}>
-          {/* Background Circle */}
-          <Circle
-            cx="50%"
-            cy="50%"
-            r={radius}
-            stroke="#f1f5f9"
-            strokeWidth={strokeWidth}
-            fill="transparent"
-          />
-          {/* Progress Circle with Gradient */}
-          <Circle
-            cx="50%"
-            cy="50%"
-            r={radius}
-            stroke="url(#staffRedGradient)"
-            strokeWidth={strokeWidth}
-            fill="transparent"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-          />
-        </G>
-      </Svg>
-      <View style={[StyleSheet.absoluteFillObject, styles.chartCenter]}>
-        <Text style={styles.chartText}>{percentage}%</Text>
-        <Text style={styles.chartSubtext}>Overall</Text>
-      </View>
-    </View>
-  );
-};
+import { getHodStaffAttendance, HodStaffAttendanceData, StaffMemberDetail } from '@/services/hodService';
 
 export default function StaffTab() {
   const { session, apiBaseUrl } = useAuth();
-  const [data, setData] = useState<HodAttendanceData | null>(null);
+  const [data, setData] = useState<HodStaffAttendanceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedErpId, setExpandedErpId] = useState<string | null>(null);
 
   const fetchAttendance = useCallback(
     async (isRefresh = false) => {
@@ -87,13 +43,45 @@ export default function StaffTab() {
     fetchAttendance();
   }, [fetchAttendance]);
 
+  const formatTime = (rawTime?: string | null) => {
+    if (!rawTime) return '--:--';
+
+    const d = new Date(rawTime);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+
+    const timeMatch = rawTime.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+    if (timeMatch) {
+      let hours = parseInt(timeMatch[1], 10);
+      const minutes = timeMatch[2];
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      return `${hours}:${minutes} ${ampm}`;
+    }
+
+    return rawTime;
+  };
+
+  const staffMembers = data?.staffMembers ?? [];
+  const filteredStaff = staffMembers.filter((staff) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      staff.name.toLowerCase().includes(q) ||
+      staff.erpid.toLowerCase().includes(q) ||
+      (staff.email && staff.email.toLowerCase().includes(q))
+    );
+  });
+
+  const toggleExpand = (erpid: string) => {
+    setExpandedErpId((prev) => (prev === erpid ? null : erpid));
+  };
+
   const totalStaff = data?.today.total ?? 0;
   const totalPresent = data?.today.present ?? 0;
   const totalAbsent = data?.today.absent ?? 0;
-  const attendancePercentage = data?.today.percentage ?? 0;
-  const history = [...(data?.history ?? [])].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
 
   return (
     <ScrollView
@@ -107,68 +95,169 @@ export default function StaffTab() {
         />
       }
     >
-      {/* Overview Card */}
-      <View style={styles.card}>
-        <View style={styles.cardHeaderRow}>
-          <Ionicons name="briefcase-outline" size={20} color="#ae2525" />
-          <Text style={styles.sectionTitle}>Today's Staff Attendance</Text>
+      {/* Header Summary Chips */}
+      <View style={styles.summaryBar}>
+        <View style={[styles.statChip, styles.statChipTotal]}>
+          <Ionicons name="briefcase-outline" size={16} color="#475569" />
+          <Text style={styles.statChipValue}>{loading ? '--' : totalStaff}</Text>
+          <Text style={styles.statChipLabel}>Total Staff</Text>
         </View>
 
-        {/* Gradient Pie Chart */}
-        <DonutChart percentage={loading ? 0 : attendancePercentage} />
+        <View style={[styles.statChip, styles.statChipPresent]}>
+          <Ionicons name="checkmark-circle-outline" size={16} color="#15803d" />
+          <Text style={styles.statChipValue}>{loading ? '--' : totalPresent}</Text>
+          <Text style={styles.statChipLabel}>Present</Text>
+        </View>
 
-        {/* Interactive Quick Stats */}
-        <View style={styles.statsRow}>
-          <View style={[styles.statBox, styles.statPresentBg]}>
-            <Ionicons name="checkmark-circle-outline" size={18} color="#15803d" />
-            <Text style={styles.statValue}>{loading ? '--' : totalPresent}</Text>
-            <Text style={styles.statLabel}>Present</Text>
-          </View>
-
-          <View style={[styles.statBox, styles.statAbsentBg]}>
-            <Ionicons name="close-circle-outline" size={18} color="#b91c1c" />
-            <Text style={styles.statValue}>{loading ? '--' : totalAbsent}</Text>
-            <Text style={styles.statLabel}>Absent</Text>
-          </View>
-
-          <View style={[styles.statBox, styles.statTotalBg]}>
-            <Ionicons name="briefcase-outline" size={18} color="#475569" />
-            <Text style={styles.statValue}>{loading ? '--' : totalStaff}</Text>
-            <Text style={styles.statLabel}>Total</Text>
-          </View>
+        <View style={[styles.statChip, styles.statChipAbsent]}>
+          <Ionicons name="close-circle-outline" size={16} color="#b91c1c" />
+          <Text style={styles.statChipValue}>{loading ? '--' : totalAbsent}</Text>
+          <Text style={styles.statChipLabel}>Absent</Text>
         </View>
       </View>
 
-      {/* History Section */}
-      <View style={styles.historySectionHeader}>
-        <Ionicons name="time-outline" size={18} color="#0f172a" />
-        <Text style={styles.historyTitle}>Past 7 Days History</Text>
-      </View>
-
-      <View style={styles.historyCard}>
-        {history.length === 0 ? (
-          <Text style={styles.noDataText}>No history records found</Text>
-        ) : (
-          history.map((item, index) => (
-            <View key={item.date} style={[styles.historyRow, index === history.length - 1 && styles.noBorder]}>
-              <View style={styles.historyLeft}>
-                <Text style={styles.historyDate}>{item.date}</Text>
-                {/* Visual Progress Bar */}
-                <View style={styles.progressBarBg}>
-                  <View style={[styles.progressBarFill, { width: `${item.percentage}%` }]} />
-                </View>
-              </View>
-
-              <View style={styles.historyRight}>
-                <Text style={styles.historyPresent}>{item.present} / {item.total}</Text>
-                <View style={styles.percentBadge}>
-                  <Text style={styles.historyPercent}>{item.percentage}%</Text>
-                </View>
-              </View>
-            </View>
-          ))
+      {/* Search Input Box */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search-outline" size={20} color="#94a3b8" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search faculty by name or ERP ID..."
+          placeholderTextColor="#94a3b8"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={18} color="#94a3b8" />
+          </TouchableOpacity>
         )}
       </View>
+
+      {/* Staff Detailed Report List */}
+      <View style={styles.sectionHeader}>
+        <Ionicons name="people-outline" size={18} color="#0f172a" />
+        <Text style={styles.sectionTitle}>Faculty In-Time & Out-Time Report</Text>
+      </View>
+
+      {loading ? (
+        <Text style={styles.loadingText}>Loading staff records...</Text>
+      ) : filteredStaff.length === 0 ? (
+        <View style={styles.emptyBox}>
+          <Ionicons name="search-outline" size={32} color="#cbd5e1" />
+          <Text style={styles.emptyText}>No faculty members found</Text>
+        </View>
+      ) : (
+        filteredStaff.map((staff) => {
+          const isExpanded = expandedErpId === staff.erpid;
+          return (
+            <View key={staff.erpid} style={styles.staffCard}>
+              <TouchableOpacity
+                style={styles.staffCardHeader}
+                activeOpacity={0.7}
+                onPress={() => toggleExpand(staff.erpid)}
+              >
+                <View style={styles.avatarCircle}>
+                  <Text style={styles.avatarText}>
+                    {staff.name.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+
+                <View style={styles.staffMainInfo}>
+                  <Text style={styles.staffName}>{staff.name}</Text>
+                  <Text style={styles.staffSubInfo}>ERP: {staff.erpid}</Text>
+                </View>
+
+                <View style={styles.rightHeaderAction}>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      staff.status === 'Present' ? styles.statusBadgePresent : styles.statusBadgeAbsent,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.statusBadgeText,
+                        staff.status === 'Present' ? styles.statusTextPresent : styles.statusTextAbsent,
+                      ]}
+                    >
+                      {staff.status}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={18}
+                    color="#64748b"
+                    style={{ marginLeft: 6 }}
+                  />
+                </View>
+              </TouchableOpacity>
+
+              {/* In Time & Out Time Row */}
+              <View style={styles.timingRow}>
+                <View style={styles.timingBox}>
+                  <Ionicons name="log-in-outline" size={16} color="#15803d" />
+                  <Text style={styles.timingLabel}>In Time:</Text>
+                  <Text style={styles.timingValue}>{formatTime(staff.loginTime)}</Text>
+                </View>
+
+                <View style={styles.timingDivider} />
+
+                <View style={styles.timingBox}>
+                  <Ionicons name="log-out-outline" size={16} color="#b91c1c" />
+                  <Text style={styles.timingLabel}>Out Time:</Text>
+                  <Text style={styles.timingValue}>{formatTime(staff.logoutTime)}</Text>
+                </View>
+              </View>
+
+              {/* Expanded 7-Day Past Attendance Report */}
+              {isExpanded && (
+                <View style={styles.expandedSection}>
+                  <View style={styles.expandedTitleRow}>
+                    <Ionicons name="time-outline" size={16} color="#ae2525" />
+                    <Text style={styles.expandedTitle}>Past 7 Days Attendance Log</Text>
+                  </View>
+
+                  <View style={styles.pastLogsTable}>
+                    {staff.pastLogs.map((log, idx) => (
+                      <View
+                        key={log.date}
+                        style={[
+                          styles.pastLogRow,
+                          idx === staff.pastLogs.length - 1 && styles.noBorder,
+                        ]}
+                      >
+                        <Text style={styles.logDateText}>{log.date}</Text>
+
+                        <View style={styles.logTimesGroup}>
+                          <Text style={styles.logTimeText}>
+                            In: {formatTime(log.loginTime)} | Out: {formatTime(log.logoutTime)}
+                          </Text>
+                        </View>
+
+                        <View
+                          style={[
+                            styles.miniBadge,
+                            log.status === 'Present' ? styles.miniBadgePresent : styles.miniBadgeAbsent,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.miniBadgeText,
+                              log.status === 'Present' ? styles.miniTextPresent : styles.miniTextAbsent,
+                            ]}
+                          >
+                            {log.status}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          );
+        })
+      )}
     </ScrollView>
   );
 }
@@ -182,170 +271,261 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 40,
   },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 3,
-    marginBottom: 20,
-  },
-  cardHeaderRow: {
+  summaryBar: {
     flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 14,
   },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#0f172a',
-  },
-  chartContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 12,
-  },
-  chartCenter: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chartText: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#0f172a',
-  },
-  chartSubtext: {
-    fontSize: 11,
-    color: '#64748b',
-    fontWeight: '500',
-    marginTop: 2,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    width: '100%',
-    gap: 8,
-    marginTop: 16,
-  },
-  statBox: {
+  statChip: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 12,
-    borderRadius: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
     borderWidth: 1,
   },
-  statPresentBg: {
+  statChipTotal: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  statChipPresent: {
     backgroundColor: '#f0fdf4',
     borderColor: '#dcfce7',
   },
-  statAbsentBg: {
+  statChipAbsent: {
     backgroundColor: '#fef2f2',
     borderColor: '#fee2e2',
   },
-  statTotalBg: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#f1f5f9',
-  },
-  statValue: {
-    fontSize: 18,
+  statChipValue: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#0f172a',
-    marginTop: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#64748b',
     marginTop: 2,
-    fontWeight: '500',
   },
-  historySectionHeader: {
+  statChipLabel: {
+    fontSize: 11,
+    color: '#64748b',
+    fontWeight: '500',
+    marginTop: 1,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 16,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#0f172a',
+    padding: 0,
+  },
+  sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     marginBottom: 12,
   },
-  historyTitle: {
-    fontSize: 17,
+  sectionTitle: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#0f172a',
   },
-  historyCard: {
+  loadingText: {
+    fontSize: 14,
+    color: '#94a3b8',
+    textAlign: 'center',
+    marginVertical: 20,
+  },
+  emptyBox: {
+    alignItems: 'center',
+    paddingVertical: 40,
     backgroundColor: '#ffffff',
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: '#e2e8f0',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#94a3b8',
+    marginTop: 8,
+  },
+  staffCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
     elevation: 2,
   },
-  historyRow: {
+  staffCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#ae2525',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  avatarText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  staffMainInfo: {
+    flex: 1,
+  },
+  staffName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  staffSubInfo: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  rightHeaderAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  statusBadgePresent: {
+    backgroundColor: '#dcfce7',
+  },
+  statusBadgeAbsent: {
+    backgroundColor: '#fee2e2',
+  },
+  statusBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  statusTextPresent: {
+    color: '#15803d',
+  },
+  statusTextAbsent: {
+    color: '#b91c1c',
+  },
+  timingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fffcf8',
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  timingBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  timingLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  timingValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  timingDivider: {
+    width: 1,
+    height: 18,
+    backgroundColor: '#cbd5e1',
+    marginHorizontal: 8,
+  },
+  expandedSection: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  expandedTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  expandedTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#ae2525',
+  },
+  pastLogsTable: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  pastLogRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#e2e8f0',
   },
   noBorder: {
     borderBottomWidth: 0,
   },
-  historyLeft: {
-    flex: 1,
-    marginRight: 12,
-  },
-  historyDate: {
-    fontSize: 14,
+  logDateText: {
+    fontSize: 12,
     fontWeight: '600',
     color: '#334155',
+    width: 80,
   },
-  progressBarBg: {
-    height: 5,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 3,
-    marginTop: 6,
-    overflow: 'hidden',
-    width: '90%',
+  logTimesGroup: {
+    flex: 1,
+    paddingHorizontal: 4,
   },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#ae2525',
-    borderRadius: 3,
-  },
-  historyRight: {
-    alignItems: 'flex-end',
-  },
-  historyPresent: {
-    fontSize: 13,
-    color: '#64748b',
+  logTimeText: {
+    fontSize: 11,
+    color: '#475569',
     fontWeight: '500',
   },
-  percentBadge: {
-    backgroundColor: '#fff7ed',
-    paddingHorizontal: 8,
+  miniBadge: {
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 8,
-    marginTop: 4,
+    borderRadius: 6,
   },
-  historyPercent: {
-    fontSize: 13,
-    color: '#e09c15',
+  miniBadgePresent: {
+    backgroundColor: '#dcfce7',
+  },
+  miniBadgeAbsent: {
+    backgroundColor: '#fee2e2',
+  },
+  miniBadgeText: {
+    fontSize: 10,
     fontWeight: '700',
   },
-  noDataText: {
-    fontSize: 14,
-    color: '#94a3b8',
-    textAlign: 'center',
-    paddingVertical: 16,
+  miniTextPresent: {
+    color: '#15803d',
+  },
+  miniTextAbsent: {
+    color: '#b91c1c',
   },
 });
