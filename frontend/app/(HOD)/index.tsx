@@ -150,7 +150,7 @@ export default function HODDashboard() {
           </View>
           <View style={styles.cardBody}>
             <Text style={styles.cardValue}>
-              {loading ? '--' : `${dashboardData?.students.percentage ?? 0}%`}
+              {loading ? '--' : `${dashboardData?.students.present ?? 0} / ${dashboardData?.students.total}`}
             </Text>
             <Text style={styles.cardSubtext}>
               {loading
@@ -170,7 +170,7 @@ export default function HODDashboard() {
           </View>
           <View style={styles.cardBody}>
             <Text style={styles.cardValue}>
-              {loading ? '--' : `${dashboardData?.staff.percentage ?? 0}%`}
+              {loading ? '--' : `${dashboardData?.staff.present ?? 0} / ${dashboardData?.staff.total ?? 0}`}
             </Text>
             <Text style={styles.cardSubtext}>
               {loading
@@ -180,60 +180,6 @@ export default function HODDashboard() {
           </View>
         </View>
       </View>
-
-      {/* 7 Days Attendance Bar Graph Section */}
-      <View style={styles.graphCard}>
-        <View style={styles.graphHeader}>
-          <View style={styles.graphTitleWrapper}>
-            <Ionicons name="stats-chart-outline" size={18} color="#ae2525" />
-            <Text style={styles.graphTitle}>Past 7 Days Attendance</Text>
-          </View>
-
-          {/* Segmented Selector for Student / Staff */}
-          <View style={styles.segmentContainer}>
-            <Pressable
-              style={[styles.segmentBtn, graphMode === 'student' && styles.segmentBtnActive]}
-              onPress={() => setGraphMode('student')}
-            >
-              <Text style={[styles.segmentText, graphMode === 'student' && styles.segmentTextActive]}>
-                Student
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[styles.segmentBtn, graphMode === 'staff' && styles.segmentBtnActive]}
-              onPress={() => setGraphMode('staff')}
-            >
-              <Text style={[styles.segmentText, graphMode === 'staff' && styles.segmentTextActive]}>
-                Staff
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Bar Chart Container */}
-        <View style={styles.chartArea}>
-          {loading ? (
-            <Text style={styles.chartLoadingText}>Loading graph...</Text>
-          ) : activeHistory.length === 0 ? (
-            <Text style={styles.chartLoadingText}>No 7-day attendance records</Text>
-          ) : (
-            <View style={styles.barsRow}>
-              {activeHistory.map((item) => {
-                const heightPct = Math.max(item.percentage, 4); // Minimum bar height for visibility
-                return (
-                  <View key={item.date} style={styles.barCol}>
-                    <Text style={styles.barValText}>{item.percentage}%</Text>
-                    <View style={styles.barTrack}>
-                      <View style={[styles.barFill, { height: `${heightPct}%` }]} />
-                    </View>
-                    <Text style={styles.barLabel}>{formatShortDate(item.date)}</Text>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-        </View>
-      </View>
     </ScrollView>
   );
 }
@@ -241,7 +187,7 @@ export default function HODDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fffcf8',
+    backgroundColor: '#f6e9d9',
   },
   content: {
     padding: 16,
@@ -383,108 +329,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748b',
     marginTop: 4,
-  },
-  graphCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-    marginBottom: 20,
-  },
-  graphHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  graphTitleWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  graphTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#0f172a',
-  },
-  segmentContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#f1f5f9',
-    borderRadius: 10,
-    padding: 3,
-  },
-  segmentBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  segmentBtnActive: {
-    backgroundColor: '#ae2525',
-  },
-  segmentText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748b',
-  },
-  segmentTextActive: {
-    color: '#ffffff',
-  },
-  chartArea: {
-    height: 170,
-    justifyContent: 'flex-end',
-    paddingTop: 10,
-  },
-  chartLoadingText: {
-    fontSize: 13,
-    color: '#94a3b8',
-    textAlign: 'center',
-    alignSelf: 'center',
-    margin: 'auto',
-  },
-  barsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'flex-end',
-    height: 150,
-  },
-  barCol: {
-    flex: 1,
-    alignItems: 'center',
-    height: '100%',
-    justifyContent: 'flex-end',
-  },
-  barValText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#64748b',
-    marginBottom: 4,
-  },
-  barTrack: {
-    width: 18,
-    height: 100,
-    backgroundColor: '#f8fafc',
-    borderRadius: 6,
-    justifyContent: 'flex-end',
-    overflow: 'hidden',
-  },
-  barFill: {
-    width: '100%',
-    backgroundColor: '#ae2525',
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
-  },
-  barLabel: {
-    fontSize: 10,
-    fontWeight: '500',
-    color: '#475569',
-    marginTop: 6,
   },
 });
