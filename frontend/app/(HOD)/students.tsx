@@ -52,6 +52,13 @@ export default function StudentsTab() {
   const divisions = data?.divisions ?? [];
   const studentsList = data?.studentsList ?? [];
 
+  // Filter divisions to ONLY show divisions present in student records
+  const activeDivIds = new Set(studentsList.map((s) => s.divisionId).filter(Boolean));
+  const activeDivNames = new Set(studentsList.map((s) => s.division).filter(Boolean));
+  const validDivisions = divisions.filter(
+    (d) => activeDivIds.has(d.id) || activeDivNames.has(d.div_name)
+  );
+
   const filteredStudents = studentsList.filter((st) => {
     // Division filter
     if (selectedDivisionId !== 'ALL') {
@@ -109,7 +116,7 @@ export default function StudentsTab() {
         </View>
       </View>
 
-      {/* Division Selector Horizontal Pills */}
+      {/* Division Selector Horizontal Pills - ONLY present divisions */}
       <View style={styles.divisionSection}>
         <Text style={styles.divisionTitle}>Select Division:</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillsScroll}>
@@ -122,7 +129,7 @@ export default function StudentsTab() {
             </Text>
           </Pressable>
 
-          {divisions.map((div) => {
+          {validDivisions.map((div) => {
             const isSelected = selectedDivisionId === div.id;
             return (
               <Pressable
@@ -192,10 +199,32 @@ export default function StudentsTab() {
                   </Text>
                 </View>
 
+                {/* Today's Status displayed directly on card header top-right */}
                 <View style={styles.rightHeaderAction}>
-                  <View style={styles.percentBadge}>
-                    <Text style={styles.percentText}>{student.overallPercentage}%</Text>
+                  <View
+                    style={[
+                      styles.statusChip,
+                      student.todayStatus === 'Present'
+                        ? styles.statusChipPresent
+                        : student.todayStatus === 'Absent'
+                        ? styles.statusChipAbsent
+                        : styles.statusChipNA,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.statusChipText,
+                        student.todayStatus === 'Present'
+                          ? styles.statusTextPresent
+                          : student.todayStatus === 'Absent'
+                          ? styles.statusTextAbsent
+                          : styles.statusTextNA,
+                      ]}
+                    >
+                      {student.todayStatus}
+                    </Text>
                   </View>
+
                   <Ionicons
                     name={isExpanded ? 'chevron-up' : 'chevron-down'}
                     size={18}
@@ -204,34 +233,6 @@ export default function StudentsTab() {
                   />
                 </View>
               </TouchableOpacity>
-
-              {/* Status Row */}
-              <View style={styles.statusRow}>
-                <Text style={styles.statusLabel}>Today's Session Status:</Text>
-                <View
-                  style={[
-                    styles.statusChip,
-                    student.todayStatus === 'Present'
-                      ? styles.statusChipPresent
-                      : student.todayStatus === 'Absent'
-                      ? styles.statusChipAbsent
-                      : styles.statusChipNA,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.statusChipText,
-                      student.todayStatus === 'Present'
-                        ? styles.statusTextPresent
-                        : student.todayStatus === 'Absent'
-                        ? styles.statusTextAbsent
-                        : styles.statusTextNA,
-                    ]}
-                  >
-                    {student.todayStatus}
-                  </Text>
-                </View>
-              </View>
 
               {/* Expanded 7-Day Past Attendance Report */}
               {isExpanded && (
@@ -463,43 +464,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  percentBadge: {
-    backgroundColor: '#fef3c7',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#fde68a',
-  },
-  percentText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#92400e',
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fffcf8',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-  },
-  statusLabel: {
-    fontSize: 12,
-    color: '#64748b',
-    fontWeight: '500',
-  },
   statusChip: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
   },
   statusChipPresent: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#15803d',
   },
   statusChipAbsent: {
     backgroundColor: '#fee2e2',
@@ -565,7 +538,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   miniBadgePresent: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: 'transparent',
   },
   miniBadgeAbsent: {
     backgroundColor: '#fee2e2',

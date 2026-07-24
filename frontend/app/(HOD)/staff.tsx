@@ -65,15 +65,33 @@ export default function StaffTab() {
   };
 
   const staffMembers = data?.staffMembers ?? [];
-  const filteredStaff = staffMembers.filter((staff) => {
-    const q = searchQuery.toLowerCase().trim();
-    if (!q) return true;
-    return (
-      staff.name.toLowerCase().includes(q) ||
-      staff.erpid.toLowerCase().includes(q) ||
-      (staff.email && staff.email.toLowerCase().includes(q))
-    );
-  });
+  const filteredStaff = staffMembers
+    .filter((staff) => {
+      const q = searchQuery.toLowerCase().trim();
+      if (!q) return true;
+      return (
+        staff.name.toLowerCase().includes(q) ||
+        staff.erpid.toLowerCase().includes(q) ||
+        (staff.email && staff.email.toLowerCase().includes(q))
+      );
+    })
+    .sort((a, b) => {
+      if (a.status === 'Present' && b.status === 'Absent') return -1;
+      if (a.status === 'Absent' && b.status === 'Present') return 1;
+
+      if (a.status === 'Present' && b.status === 'Present') {
+        if (!a.loginTime) return 1;
+        if (!b.loginTime) return -1;
+        const timeA = new Date(a.loginTime).getTime();
+        const timeB = new Date(b.loginTime).getTime();
+        if (!isNaN(timeA) && !isNaN(timeB)) {
+          return timeB - timeA;
+        }
+        return b.loginTime.localeCompare(a.loginTime);
+      }
+
+      return a.name.localeCompare(b.name);
+    });
 
   const toggleExpand = (erpid: string) => {
     setExpandedErpId((prev) => (prev === erpid ? null : erpid));
@@ -411,7 +429,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   statusBadgePresent: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#15803d',
   },
   statusBadgeAbsent: {
     backgroundColor: '#fee2e2',
@@ -513,7 +533,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   miniBadgePresent: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: 'transparent',
   },
   miniBadgeAbsent: {
     backgroundColor: '#fee2e2',

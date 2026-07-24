@@ -317,6 +317,26 @@ class HodService {
       };
     });
 
+    // Sort staff members according to today's logs:
+    // Present staff above absent staff, recent in-time above less recent.
+    staffMembers.sort((a, b) => {
+      if (a.status === "Present" && b.status === "Absent") return -1;
+      if (a.status === "Absent" && b.status === "Present") return 1;
+
+      if (a.status === "Present" && b.status === "Present") {
+        if (!a.loginTime) return 1;
+        if (!b.loginTime) return -1;
+        const timeA = new Date(a.loginTime).getTime();
+        const timeB = new Date(b.loginTime).getTime();
+        if (!isNaN(timeA) && !isNaN(timeB)) {
+          return timeB - timeA;
+        }
+        return b.loginTime.localeCompare(a.loginTime);
+      }
+
+      return a.name.localeCompare(b.name);
+    });
+
     return {
       today: {
         total: todaySummary.total,
