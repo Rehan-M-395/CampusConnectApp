@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     textAlign: 'center',
     alignSelf: 'center',
-    marginAuto: 'auto',
+    margin: 'auto',
   },
   barsRow: {
     flexDirection: 'row',
